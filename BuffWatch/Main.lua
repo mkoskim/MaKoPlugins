@@ -58,6 +58,8 @@ local Settings = {
 		Height = 200
 	},
 	WindowVisible = true,
+    LoggedEffects = {
+    },
 }
 
 Settings = Turbine.PluginData.Load(
@@ -68,12 +70,31 @@ Settings = Turbine.PluginData.Load(
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Effect tracking
+-- Effect logging: gather information from all buffs and debuffs a character
+-- has met on his travels, to be shown and chosen to be tracked.
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-local tracked = {}
+local LoggedEffect = class()
+
+function LoggedEffect:Constructor(effect)
+    self.name = effect:GetName()
+    self.icon = effect:GetIcon()
+    self.category = effect:GetCategory()
+    self.isDebuff = effect:IsDebuff()
+    self.isCurable = effect:IsCurable()
+    self.description = effect:GetDescription()
+end
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Logged effect viewer
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
 local effectlist = utils.ScrolledListBox()
 
 -- ----------------------------------------------------------------------------
@@ -103,24 +124,42 @@ function EffectNode:Constructor(effect)
 	self.nameWidget:SetText( self.name );
 	
 	effectlist:AddItem(self)
+end
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Effect hooks: these are called separately to all individual effects,
+-- for example, Warden's Defiant Challenge's effect 'Defiance' is called
+-- up to five times.
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+function checkIfLogged(effect)
+	if not Settings.LoggedEffects[name] == nil then
+	    return
 	end
 
--- ----------------------------------------------------------------------------
+    Settings.LoggedEffects[effect:GetName()] = LoggedEffect(effect)
+end
 
 local function EffectAdded(effect)
-	xDEBUG(string.format("Added [%s]: %s", tostring(effect), effect:GetName()))
+	DEBUG(string.format("Added [%s]: %s", tostring(effect), effect:GetName()))
 	xDEBUG(string.format("%s", effect:GetID()))
 	xDEBUG(string.format("%s", effect:GetDescription()))
 	xDEBUG(string.format("%s", effect:GetCategory()))
-	name = effect:GetName()
-	if tracked[name] == nil then
-		tracked[name] = EffectNode(effect)
-	end
+
+    checkIfLogged(effect)
 end
 
+-- ----------------------------------------------------------------------------
+
 local function EffectRemoved(effect)
-	xDEBUG(string.format("Removed [%s]: %s", tostring(effect), effect:GetName()))
+	DEBUG(string.format("Removed [%s]: %s", tostring(effect), effect:GetName()))
 end
+
+-- ----------------------------------------------------------------------------
 
 local function RefreshEffects()
 	for i = 1, effects:GetCount() do
@@ -288,7 +327,7 @@ INFO("/buffwatch [show | hide | toggle]" )
 local _hooks = {
 	{ object = effects, event = "EffectAdded", callback = function(sender, args) EffectAdded(effects:Get(args.Index)) end },
 	{ object = effects, event = "EffectRemoved", callback = function(sender, args) EffectRemoved(args.Effect) end },
-	-- { object = effects, event = "EffectCleared", callback = RefreshHandler },
+	{ object = effects, event = "EffectCleared", callback = function(sender, args) EffectRemoved(args.Effect) end },
 }
 
 function InstallHooks()
