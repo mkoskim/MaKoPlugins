@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Plugin>
+    <Information>
+        <Name>MaKo: StatWatch</Name>
+        <Author>MaKo</Author>
+        <Version>0.5</Version>
+        <Description>Track stats in real time</Description>
+    </Information>
+    <Package>MaKoPlugins.StatWatch.Main</Package>
+</Plugin>

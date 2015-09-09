@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Plugin>
+    <Information>
+        <Name>MaKo: BuffWatch</Name>
+        <Author>MaKo</Author>
+        <Version>0.1</Version>
+        <Description>Choose buffs to track in real time</Description>
+    </Information>
+    <Package>MaKoPlugins.BuffWatch.Main</Package>
+</Plugin>

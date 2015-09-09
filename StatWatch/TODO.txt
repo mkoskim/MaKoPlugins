@@ -1,0 +1,38 @@
+-------------------------------------------------------------------------------
+
+DONE:
+
+- Fixed: Power/Morale update works wrongly
+
+- DONE: Setting reference values
+
+- DONE: Setting cap ratings as reference (when they exist). Can be computed
+  from segment info.
+
+- DONE: Colors for differences
+
+-------------------------------------------------------------------------------
+
+MISC:
+
+- 'Essence' values? Divide stat by corresponding greater essence rating, so
+  that you could estimate how many essences you would need to reach the rating.
+
+- Dump stats to chat
+  
+- No update when minimized / group is collapsed
+
+- Separate window for real time stat tracking
+
+- Different window setups?
+
+- Icon for refresh button - and it could be 'hidden' somewhere...
+
+- It would be good to have stats and differences in different formats,
+  that is, for example, stats as percentages and differences in ratings.
+
+-------------------------------------------------------------------------------
+
+FIX:
+
+- Mastery percentage calculation has no repeating block
