@@ -11,10 +11,9 @@ debugging = true
 -- ****************************************************************************
 
 import "MaKoPlugins.Utils";
-import "MaKoPlugins.StatWatch.Utils";
+import "MaKoPlugins.StatWatch.Conversion";
 
 local utils   = MaKoPlugins.Utils
-local statutils = MaKoPlugins.StatWatch.Utils
 local _plugin = utils.PlugIn()
 
 local println = utils.println
@@ -35,7 +34,7 @@ local attr    = player:GetAttributes()
 local effects = player:GetEffects()
 local equip   = player:GetEquipment()
 
-local armortype = statutils.ArmorType[player:GetClass()]
+local armortype = ArmorType[player:GetClass()]
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -77,7 +76,7 @@ Settings = Turbine.PluginData.Load(
 local Stat = class()
 local stats = { }
 local percentages = Settings.ShowPercentages
-local ToPercent = statutils.ratingToPercentage
+local ToPercent = ratingToPercentage
 
 local function FormatPercentage(value) return string.format("%.1f %%", value) end
 local function FormatPercentageInc(value) return string.format("%+.1f %%", value) end
@@ -140,7 +139,7 @@ end
 
 function Stat:SetCapRef()
 	if type(self.rawvalue) ~= "string" then
-		self.refvalue = statutils.ratingCap(self.percentage, player:GetLevel())
+		self.refvalue = ratingCap(self.percentage, player:GetLevel())
 	end
 end
 
