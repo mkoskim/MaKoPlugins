@@ -12,7 +12,7 @@ import "MaKoPlugins.Utils.Class";
 
 function println(str)
 	Turbine.Shell.WriteLine(str)
-	end
+end
 
 -- ****************************************************************************
 -- Store Plug-in name: when unloading, global plugin is destroyed when Unload
@@ -57,6 +57,7 @@ function PlugIn:atexit_execute()
     for i = 1, size do
 		self._atexit[i]()
 	end
+	self._atexit = { }
 end
 
 -- ****************************************************************************

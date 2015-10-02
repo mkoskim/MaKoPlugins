@@ -17,6 +17,7 @@ debugging = true
 -- ****************************************************************************
 
 import "MaKoPlugins.Utils";
+import "MaKoPlugins.ACA.Parser";
 
 local utils   = MaKoPlugins.Utils
 local _plugin = utils.PlugIn()
@@ -33,7 +34,7 @@ local xDEBUG  = function(str) _plugin:xDEBUG(str) end
 -- ----------------------------------------------------------------------------
 
 local player  = Turbine.Gameplay.LocalPlayer:GetInstance();
-local effects = player:GetEffects()
+-- local effects = player:GetEffects()
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -50,7 +51,13 @@ local Settings = {
 		Width = 200,
 		Height = 200
 	},
+    Logging = {
+        ["Enabled"] = false,
+        ["Events"] = { }
+    }
 }
+
+-- ----------------------------------------------------------------------------
 
 Settings = Turbine.PluginData.Load(
 		Turbine.DataScope.Character,
@@ -60,9 +67,22 @@ Settings = Turbine.PluginData.Load(
 --[[ -- Debugging
 Settings.Logging = { 
     ["Enabled"] = true,
-    ["Effects"] = { }
+    ["Events"] = { }
 }
 -- ]]--
+
+-- ----------------------------------------------------------------------------
+
+local function SaveSettings()
+	INFO("Saving settings...")
+	Turbine.PluginData.Save(
+		Turbine.DataScope.Character,
+		"ACASettings",
+		Settings
+	)
+end
+
+-- _plugin:atexit(SaveSettings);
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -72,17 +92,41 @@ Settings.Logging = {
 -- ****************************************************************************
 -- ****************************************************************************
 
---[[ local LoggedEffect = class()
+local CombatEvent = class()
 
-function LoggedEffect:Constructor(effect)
-    self.name = effect:GetName()
-    self.icon = effect:GetIcon()
-    self.category = effect:GetCategory()
-    self.isDebuff = effect:IsDebuff()
-    self.isCurable = effect:IsCurable()
-    self.description = effect:GetDescription()
+function CombatEvent:Constructor(line)
+	self.eventtype, self.actor, self.target, self.skill,
+	    self.var1, self.var2, self.var3, self.var4 = parse(line)
 end
--- ]]--
+
+-- ----------------------------------------------------------------------------
+
+local function MessageReceived(sender, args)
+    if  args.ChatType ~= Turbine.ChatType.PlayerCombat and
+        args.ChatType ~= Turbine.ChatType.EnemyCombat then
+        return
+    end
+
+    if Settings.Logging.Enabled then
+        table.insert(Settings.Logging.Events, args.Message)
+    end
+
+    event = CombatEvent(args.Message)
+
+end
+
+-- ----------------------------------------------------------------------------
+
+function ProcessLog()
+    for k, line in pairs(Settings.Logging.Events) do
+        local event = CombatEvent(line)
+        if event.eventtype ~= nil then
+            DEBUG(event.eventtype .. ": " .. event.actor .. " -> " .. event.target)
+        end
+    end
+end
+
+ProcessLog()
 
 -- ----------------------------------------------------------------------------
 -- Listbox for logged effects
@@ -136,14 +180,10 @@ local loggedlist = LoggedListBox()
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Combat event hooks
+-- 
 --
 -- ****************************************************************************
 -- ****************************************************************************
-
-local function MessageReceived(sender, args)
-    DEBUG("Msg: " .. args.Message)
-end
 
 -- ****************************************************************************
 -- ****************************************************************************
