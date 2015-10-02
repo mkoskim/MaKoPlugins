@@ -432,21 +432,8 @@ function StatBrowser:Constructor()
 	-- ListBox for stats
 	-- ------------------------------------------------------------------------
 
-	self.frame = Turbine.UI.Control()
-	self.frame:SetParent( self );
-	self.frame:SetBackColor( utils.focusColor );	
-
-	self.statlist = Turbine.UI.TreeView();
-	self.statlist:SetParent( self );
-	self.statlist:SetIndentationWidth( 20 );
-	self.statlist:SetBackColor( utils.bgColor );
-
-	self.scrollbar = Turbine.UI.Lotro.ScrollBar();
-    self.scrollbar:SetOrientation( Turbine.UI.Orientation.Vertical );
-    self.scrollbar:SetParent( self );
-	self.scrollbar:SetBackColor( utils.bgColor );
-	
-	self.statlist:SetVerticalScrollBar( self.scrollbar );
+    self.statlist = utils.ScrolledTreeView()
+    self.statlist:SetParent(self)
 
 	-- ------------------------------------------------------------------------
 	-- Buttons
@@ -650,14 +637,8 @@ end
 
 function StatBrowser:SizeChanged( sender, args )
 
-	self.frame:SetPosition(18, 38)
-	self.frame:SetSize(self:GetWidth() - 2*18, self:GetHeight() - 2*38)
-
 	self.statlist:SetPosition( 20, 40 );
 	self.statlist:SetSize( self:GetWidth() - 2*20, self:GetHeight() - 2*40 );
-
-    self.scrollbar:SetPosition( self:GetWidth() - 30, 40 );
-    self.scrollbar:SetSize( 10, self:GetHeight() - 80 );
 
 	self.refreshbtn:SetSize( 90, 20 );
 	self.refreshbtn:SetPosition(
