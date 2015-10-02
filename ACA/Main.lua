@@ -1,9 +1,8 @@
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- BuffWatch: Track selected buffs at real time. This plugin has two parts:
--- (1) window to show tracked effects, to be used to choose the ones you
--- like to track, and (2) window to track selected effects.
+-- Alternative Combat Analyzer: This analyzer concentrates on approximating
+-- how much damage was avoided. Unlike CA, we don't treat all hits equal.
 --
 -- ****************************************************************************
 -- ****************************************************************************
@@ -11,14 +10,10 @@
 debugging = true
 
 -- ****************************************************************************
-
--- Idea:
 --
--- - Have certain amounts of slots at screen
--- - Assign effects (buffs, debuffs) to each slot
--- - Maintain a database for effects, to be chosen to slots
+-- Planning: First we need combat event line processing. We need logging so
+-- that we can use the same data several times.
 --
-
 -- ****************************************************************************
 
 import "MaKoPlugins.Utils";
@@ -32,8 +27,6 @@ local DEBUG   = function(str) _plugin:DEBUG(str) end
 local xDEBUG  = function(str) _plugin:xDEBUG(str) end
 
 -- ****************************************************************************
-
-xDEBUG("Loading...");
 
 -- ----------------------------------------------------------------------------
 -- Obtain & extending player info, ready for using
@@ -51,28 +44,20 @@ local effects = player:GetEffects()
 -- ****************************************************************************
 
 local Settings = {
-	WatchWindowPosition = {
+	WindowPosition = {
 		Left = 0,
 		Top  = 0,
 		Width = 200,
 		Height = 200
 	},
-	WatchWindowVisible = true,
-    WatchSlots = 5,
-    WatchedEffects = {
-    },
-    Logging = {
-        Enabled = true,
-        Effects = { }
-    },
 }
 
 Settings = Turbine.PluginData.Load(
 		Turbine.DataScope.Character,
-		"BuffWatchSettings"
+		"ACASettings"
 	) or Settings;
 
--- --[[ -- Debugging
+--[[ -- Debugging
 Settings.Logging = { 
     ["Enabled"] = true,
     ["Effects"] = { }
@@ -82,13 +67,12 @@ Settings.Logging = {
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Effect logging: gather information from all buffs and debuffs a character
--- has met on his travels, to be shown and chosen to be tracked.
+-- Analyzer database line
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-local LoggedEffect = class()
+--[[ local LoggedEffect = class()
 
 function LoggedEffect:Constructor(effect)
     self.name = effect:GetName()
@@ -98,11 +82,13 @@ function LoggedEffect:Constructor(effect)
     self.isCurable = effect:IsCurable()
     self.description = effect:GetDescription()
 end
+-- ]]--
 
 -- ----------------------------------------------------------------------------
 -- Listbox for logged effects
 -- ----------------------------------------------------------------------------
 
+--[[
 local LoggedNode = class(Turbine.UI.Control)
 
 function LoggedNode:Constructor(logged)
@@ -124,9 +110,11 @@ function LoggedNode:Constructor(logged)
 	self.name:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
 	self.name:SetText( self.effect.name );
 end
+-- ]]--
 
 -- ----------------------------------------------------------------------------
 
+--[[
 local LoggedListBox = class(utils.ScrolledListBox)
 
 function LoggedListBox:AddLogged(logged)
@@ -143,48 +131,18 @@ function LoggedListBox:Constructor()
 end
 
 local loggedlist = LoggedListBox()
+-- ]]--
 
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Effect hooks: these are called separately to all individual effects,
--- for example, Warden's Defiant Challenge's effect 'Defiance' is called
--- up to five times.
+-- Combat event hooks
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-function checkIfLogged(effect)
-	if Settings.Logging.Enabled and Settings.Logging.Effects[name] == nil then
-        local logged = LoggedEffect(effect)
-        Settings.Logging.Effects[logged.name] = logged
-        loggedlist:AddLogged(logged)
-        DEBUG(string.format("Logged: %s", effect:GetName()))
-    end
-end
-
-local function EffectAdded(effect)
-	xDEBUG(string.format("Added [%s]: %s", tostring(effect), effect:GetName()))
-	xDEBUG(string.format("%s", effect:GetID()))
-	xDEBUG(string.format("%s", effect:GetDescription()))
-	xDEBUG(string.format("%s", effect:GetCategory()))
-
-    checkIfLogged(effect)
-end
-
--- ----------------------------------------------------------------------------
-
-local function EffectRemoved(effect)
-	DEBUG(string.format("Removed [%s]: %s", tostring(effect), effect:GetName()))
-end
-
--- ----------------------------------------------------------------------------
-
-local function RefreshEffects()
-	for i = 1, effects:GetCount() do
-	    EffectAdded(effects:Get(i))
-		effect = effects:Get(i)
-	end
+local function MessageReceived(sender, args)
+    DEBUG("Msg: " .. args.Message)
 end
 
 -- ****************************************************************************
@@ -201,19 +159,12 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- 
---
--- ****************************************************************************
--- ****************************************************************************
-
--- ****************************************************************************
--- ****************************************************************************
---
 -- Window to browse tracked effects
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
+--[[
 LogBrowser = class(Turbine.UI.Lotro.Window);
 
 function LogBrowser:Constructor()
@@ -260,19 +211,24 @@ function LogBrowser:VisibleChanged(sender, args)
 	-- Settings.WindowVisible = self:IsVisible()
 end
 
+-- ]]--
+
 -- ----------------------------------------------------------------------------
 -- Layout elements
 -- ----------------------------------------------------------------------------
 
+--[[
 function LogBrowser:SizeChanged(sender, args)
 	loggedlist:SetPosition(20, 40);
 	loggedlist:SetSize(self:GetWidth()-40, self:GetHeight()-80);
 end
+-- ]]--
 
 -- ----------------------------------------------------------------------------
 -- Save settings on unload
 -- ----------------------------------------------------------------------------
 
+--[[
 function LogBrowser:Unload()
 
 	-- ------------------------------------------------------------------------
@@ -296,13 +252,14 @@ function LogBrowser:Unload()
 	)
 	self:SetVisible( false );
 end
+-- ]]--
 
 -- ----------------------------------------------------------------------------
 -- Create window
 -- ----------------------------------------------------------------------------
 
-local mainwnd = LogBrowser()
-_plugin:atexit(function() mainwnd:Unload() end)
+-- local mainwnd = LogBrowser()
+-- _plugin:atexit(function() mainwnd:Unload() end)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -316,22 +273,22 @@ local myCMD = Turbine.ShellCommand();
 
 function myCMD:Execute(cmd, args)
 	if ( args == "show" ) then
-		mainwnd:SetVisible( true );
+		-- mainwnd:SetVisible( true );
 		-- mainwnd:Refresh()
 	elseif ( args == "hide" ) then
-		mainwnd:SetVisible( false );
+		-- mainwnd:SetVisible( false );
 	elseif ( args == "toggle" ) then
-		mainwnd:SetVisible( not mainwnd:IsVisible() );
+		-- mainwnd:SetVisible( not mainwnd:IsVisible() );
 		-- mainwnd:Refresh()
 	else
-		INFO("/buffwatch [show | hide | toggle]")
+		INFO("/aca [show | hide | toggle]")
 	end
 end
 
-Turbine.Shell.AddCommand( "buffwatch", myCMD );
+Turbine.Shell.AddCommand( "aca", myCMD );
 _plugin:atexit(function() Turbine.Shell.RemoveCommand(myCMD) end)
 
-INFO("/buffwatch [show | hide | toggle]" )
+INFO("/aca [show | hide | toggle]" )
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -342,9 +299,7 @@ INFO("/buffwatch [show | hide | toggle]" )
 -- ****************************************************************************
 
 local _hooks = {
-	{ object = effects, event = "EffectAdded", callback = function(sender, args) EffectAdded(effects:Get(args.Index)) end },
-	{ object = effects, event = "EffectRemoved", callback = function(sender, args) EffectRemoved(args.Effect) end },
-	{ object = effects, event = "EffectCleared", callback = function(sender, args) EffectRemoved(args.Effect) end },
+	{ object = Turbine.Chat, event = "Received", callback = MessageReceived },
 }
 
 function InstallHooks()

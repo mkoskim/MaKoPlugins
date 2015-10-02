@@ -24,6 +24,7 @@ PlugIn = class()
 function PlugIn:Constructor()
 	self._atexit = {}
 	self.name = plugin:GetName()
+    self:INFO("Loading")
 	plugin.Unload = function()
 		self:INFO("Unloading...")
 		self:atexit_execute()

@@ -254,17 +254,6 @@ Stat("TactELM", function()
 -- ****************************************************************************
 
 -- ----------------------------------------------------------------------------
--- Constants
--- ----------------------------------------------------------------------------
-
-local IconExpand = 0x41007E27; -- 16x16
-local IconCollapse = 0x41007E26; -- 16x16
-local HeaderBackground = 0x411105A6; -- 9x16
-
-local bgColor = Turbine.UI.Color( 0, 0, 0);
-local focusColor = Turbine.UI.Color(1, 0.15, 0.15, 0.15);
-
--- ----------------------------------------------------------------------------
 -- Stat Node (stat line in listbox)
 -- ----------------------------------------------------------------------------
 
@@ -346,7 +335,7 @@ function StatSep:Constructor()
 	-- self.frame = Turbine.UI.Control();
 	-- self.frame:SetParent( self );
 	-- self.frame:SetSize( self:GetSize() );
-	self:SetBackColor( focusColor );
+	self:SetBackColor( utils.focusColor );
 	
 end
 
@@ -378,11 +367,11 @@ function StatGroup:Constructor( name, nodes )
 	self.iconExpand = Turbine.UI.Control();
 	self.iconExpand:SetParent( self );
 	self.iconExpand:SetSize( 16, 16 );
-	self.iconExpand:SetBackground( IconExpand );
+	self.iconExpand:SetBackground( utils.IconExpand );
 	self.iconExpand:SetBlendMode( Turbine.UI.BlendMode.AlphaBlend );
 	-- self.iconExpand:SetMouseVisible( false );
 
-	self:SetBackground( HeaderBackground );
+	self:SetBackground( utils.HeaderBackground );
 		
 	local childList = self:GetChildNodes();
 
@@ -393,9 +382,9 @@ function StatGroup:Constructor( name, nodes )
 	self.MouseClick = function( sender, args )
 		local expanded = self:IsExpanded();
 		if expanded then
-			self.iconExpand:SetBackground( IconCollapse );
+			self.iconExpand:SetBackground( utils.IconCollapse );
 		else
-			self.iconExpand:SetBackground( IconExpand );
+			self.iconExpand:SetBackground( utils.IconExpand );
 		end
 	end
 
@@ -446,17 +435,17 @@ function StatBrowser:Constructor()
 
 	self.frame = Turbine.UI.Control()
 	self.frame:SetParent( self );
-	self.frame:SetBackColor( focusColor );	
+	self.frame:SetBackColor( utils.focusColor );	
 
 	self.statlist = Turbine.UI.TreeView();
 	self.statlist:SetParent( self );
 	self.statlist:SetIndentationWidth( 20 );
-	self.statlist:SetBackColor( bgColor );
+	self.statlist:SetBackColor( utils.bgColor );
 
 	self.scrollbar = Turbine.UI.Lotro.ScrollBar();
     self.scrollbar:SetOrientation( Turbine.UI.Orientation.Vertical );
     self.scrollbar:SetParent( self );
-	self.scrollbar:SetBackColor( bgColor );
+	self.scrollbar:SetBackColor( utils.bgColor );
 	
 	self.statlist:SetVerticalScrollBar( self.scrollbar );
 
