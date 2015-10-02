@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Plugin>
     <Information>
-        <Name>MaKo: Alternative CA</Name>
+        <Name>MaKo (expr): Alternative CA</Name>
         <Author>MaKo</Author>
         <Version>0.1</Version>
         <Description>Alternative Combat Analyzer</Description>

@@ -10,8 +10,8 @@ import "MaKoPlugins.Utils.Class";
 
 -- ****************************************************************************
 
-function println(str)
-	Turbine.Shell.WriteLine(str)
+function println(fmt, ...)
+	Turbine.Shell.WriteLine(string.format(fmt, unpack(arg)))
 end
 
 -- ****************************************************************************
@@ -33,17 +33,17 @@ end
 
 -- ****************************************************************************
 
-function PlugIn:INFO(str)
-	println( self.name .. ": " .. str)
+function PlugIn:INFO(fmt, ...)
+	println( self.name .. ": " .. fmt, unpack(arg))
 	end
 
-function PlugIn:DEBUG(str)
+function PlugIn:DEBUG(fmt, ...)
 	if debugging then
-		self:INFO("DEBUG: " .. str)
+		self:INFO("DEBUG: " .. str, unpack(arg))
 		end
 	end
 
-function PlugIn:xDEBUG(str)
+function PlugIn:xDEBUG(fmt, ...)
 	end
 
 -- ****************************************************************************
@@ -65,7 +65,7 @@ end
 
 function showfields(tbl)
 	for k, v in pairs(tbl) do
-		println( "Name: " .. tostring(k) .. ", value: " .. tostring(v) )
+		println( "Name: %s, value: %s", tostring(k), tostring(v) )
 		end
 	end
 

@@ -1,8 +1,8 @@
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Alternative Combat Analyzer: Combat line parser, mostly copied from
--- CA.
+-- Alternative Combat Analyzer: Combat line parser, copied & modified from
+-- CA parser.
 --
 -- ****************************************************************************
 -- ****************************************************************************
@@ -17,8 +17,8 @@ local println = MaKoPlugins.Utils.println
 UpdateType = {
     ["Damage"] = 1,
     -- 2,
-    ["HealMorale"] = 3,
-    ["HealPower"] = 4,
+    ["RestoreMorale"] = 3,
+    ["RestorePower"] = 4,
     -- 5,
     -- 6,
     ["Interrupt"] = 7,
@@ -33,28 +33,76 @@ UpdateType = {
     ["Buff"] = 17,
 }
 
-CritType = {
-    ["None"] = 1,
+-- ****************************************************************************
+
+HitType = {
+    ["Regular"] = 1,
     ["Critical"] = 2,
-    ["Devastating"] = 3,
+    ["Devastate"] = 3,
+    ["Miss"] = 4,
+    ["Immune"] = 5,
+    ["Resist"] = 6,
+    ["Block"] = 7,
+    ["Parry"] = 8,
+    ["Evade"] = 9,
+    ["PartialBlock"] = 10,
+    ["PartialParry"] = 11,
+    ["PartialEvade"] = 12,
+    ["Deflect"] = 13,
+    ["Unknown"] = 14,
 }
 
-AvoidType = {
-    ["None"] = 1,
-    ["Miss"] = 2,
-    ["Immune"] = 3,
-    ["Resist"] = 4,
-    ["Block"] = 5,
-    ["Parry"] = 6,
-    ["Evade"] = 7,
-    ["PartialBlock"] = 8,
-    ["PartialParry"] = 9,
-    ["PartialEvade"] = 10,
-    ["Deflect"] = 11,
+DamageType = {
+    ["Common"] = 1,
+    ["Fire"] = 2,
+    ["Lightning"] = 3,
+    ["Frost"] = 4,
+    ["Acid"] = 5,
+    ["Shadow"] = 6,
+    ["Light"] = 7,
+    ["Beleriand"] = 8,
+    ["Westernesse"] = 9,
+    ["AncientDwarf"] = 10,
+    ["FellWrought"] = 11,
+    ["OrcCraft"] = 12,
+    ["Unknown"] = 13,
+}
+
+HitTypeName = {
+    [HitType.Regular] = "Regular",
+    [HitType.Critical] = "Critical",
+    [HitType.Devastate] = "Devastating",
+    [HitType.Miss] = "Miss",
+    [HitType.Immune] = "Immune",
+    [HitType.Resist] = "Resist",
+    [HitType.Block] = "Block",
+    [HitType.Parry] = "Parry",
+    [HitType.Evade] = "Evade",
+    [HitType.PartialBlock] = "Partial Block",
+    [HitType.PartialParry] = "Partial Parry",
+    [HitType.PartialEvade] = "Partial Evade",
+    [HitType.Deflect] = "Deflect",
+    [HitType.Unknown] = "Unknown",
 }
 
 -- ****************************************************************************
 -- ****************************************************************************
+
+local function GetDamageType(dmgtype)
+	return 
+	    dmgType == nil and nil or
+		dmgType == "Common " and DamageType.Common or
+		dmgType == "Fire " and DamageType.Fire or
+		dmgType == "Lightning " and DamageType.Lightning or
+		dmgType == "Frost " and DamageType.Frost or
+		dmgType == "Acid " and DamageType.Acid or
+		dmgType == "Shadow " and DamageType.Shadow or
+		dmgType == "Light " and DamageType.Light or
+		dmgType == "Beleriand " and DamageType.Beleriand or
+		dmgType == "Westernesse " and DamageType.Westernesse or
+		dmgType == "Ancient Dwarf-make " and DamageType.AncientDwarf or
+		DamageType.Unknown;
+end
 
 local function _parse(line)
 
@@ -68,14 +116,13 @@ local function _parse(line)
 
 		initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 
-		local avoidType =
-			string.match(avoidAndCrit,"^partially blocked") and 8 or
-			string.match(avoidAndCrit,"^partially parried") and 9 or
-			string.match(avoidAndCrit,"^partially evaded") and 10 or 1;
-
-		local critType =
-			string.match(avoidAndCrit,"critical $") and 2 or
-			string.match(avoidAndCrit,"devastating $") and 3 or 1;
+		local hitType =
+			string.match(avoidAndCrit,"^partially blocked") and HitType.PartialBlock or
+			string.match(avoidAndCrit,"^partially parried") and HitType.PartialParry or
+			string.match(avoidAndCrit,"^partially evaded")  and HitType.PartialEvade or
+			string.match(avoidAndCrit,"critical $") and HitType.Critical or
+			string.match(avoidAndCrit,"devastating $") and HitType.Devastate or
+			HitType.Regular;
 
 		skillName = string.match(skillName,"^ with (.*)$") or "Direct Damage"; -- (as of v4.1.0)
 
@@ -84,35 +131,25 @@ local function _parse(line)
 		if targetName == nil then
 			targetName = string.gsub(targetNameAmountAndType,"^[Tt]he ","");
 			amount = 0;
-			dmgType = 10;
+			dmgType = DamageType.Unknown;
 			moralePower = 3;
 		-- some damage was dealt
 		else
 			targetName = string.gsub(targetName,"^[Tt]he ","");
 			amount = string.gsub(amount,",","")+0;
-      
-      dmgType = string.match(dmgType, "^%(.*%) (.*)$") or dmgType; -- 4.2.3 adjust for mounted combat
-			-- note there may be no damage type
-			dmgType = 
-				dmgType == "Common " and 1 or
-				dmgType == "Fire " and 2 or
-				dmgType == "Lightning " and 3 or
-				dmgType == "Frost " and 4 or
-				dmgType == "Acid " and 5 or
-				dmgType == "Shadow " and 6 or
-				dmgType == "Light " and 7 or
-				dmgType == "Beleriand " and 8 or
-				dmgType == "Westernesse " and 9 or
-				dmgType == "Ancient Dwarf-make " and 10 or 11;
-			moralePower = (moralePower == "Morale" and 1 or moralePower == "Power" and 2 or 3);
+
+            dmgType = string.match(dmgType, "^%(.*%) (.*)$") or dmgType; -- 4.2.3 adjust for mounted combat
+            dmgType = GetDamageType(dmgType)
+	        moralePower = (moralePower == "Morale" and 1 or moralePower == "Power" and 2 or 3);
 		end
 
 		-- Currently ignores damage to power
 		if (moralePower == 2) then return nil end
 
 		-- Update
-		return 1, initiatorName, targetName, skillName,
-		    amount, avoidType, critType, dmgType;
+		return UpdateType.Damage,
+		    initiatorName, targetName, skillName,
+		    amount, hitType, dmgType;
 	end
 
     -- ------------------------------------------------------------------------
@@ -127,8 +164,9 @@ local function _parse(line)
 	if (initiatorName ~= nil) then
 		initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 		local critType =
-			crit == "critical " and 2 or
-			crit == "devastating " and 3 or 1;
+			crit == "critical " and HitType.Critical or
+			crit == "devastating " and HitType.Devastate or
+			HitType.Regular;
 
 		local skillNameTargetNameAndAmount, ending = string.match(skillNameTargetNameAmountAndType,"^(.*)to (.*)$");
 
@@ -157,7 +195,7 @@ local function _parse(line)
 		end
 
 		-- Update
-		return (moralePower == 2 and 4 or 3),
+		return (moralePower == 2 and UpdateType.RestorePower or UpdateType.RestoreMorale),
 		    initiatorName, targetName, skillName, amount, critType;
 	end
 
@@ -172,29 +210,30 @@ local function _parse(line)
 		targetName = string.gsub(targetName,"^[Tt]he ","");
 
 		-- Update
-		return 17, initiatorName, targetName, skillName;
+		return UpdateType.Buff, initiatorName, targetName, skillName;
 	end
 
     -- ------------------------------------------------------------------------
-	-- 4) Avoid line --
+	-- 4) (Full) Avoid line --
     -- ------------------------------------------------------------------------
 
 	local initiatorNameMiss, skillName, targetNameAvoidType = string.match(line,"^(.*) to use (.*) on (.*)%.$");
 	
 	if (initiatorNameMiss ~= nil) then
 		initiatorName = string.match(initiatorNameMiss,"^(.*) tried$");
-		local targetName, avoidType;
+		local targetName, avoidType = HitType.Uknown;
 		-- standard avoid
 		if (initiatorName ~= nil) then
 			initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 			targetName,avoidType = string.match(targetNameAvoidType,"^(.*) but (.*) the attempt$");
 			targetName = string.gsub(targetName,"^[Tt]he ","");
 			avoidType = 
-				string.match(avoidType," blocked$") and 5 or
-				string.match(avoidType," parried$") and 6 or
-				string.match(avoidType," evaded$") and 7 or
-				string.match(avoidType," resisted$") and 4 or
-				string.match(avoidType," was immune to$") and 3 or 1;
+				string.match(avoidType," blocked$") and HitType.Block or
+				string.match(avoidType," parried$") and HitType.Parry or
+				string.match(avoidType," evaded$") and HitType.Evade or
+				string.match(avoidType," resisted$") and HitType.Resist or
+				string.match(avoidType," was immune to$") and HitType.Immune or
+				HitType.Unknown;
 
 		-- miss or deflect (deflect added in v4.2.2)
 		else
@@ -202,9 +241,9 @@ local function _parse(line)
 
             if (initiatorName == nil) then
                 initiatorName = string.match(initiatorNameMiss,"^(.*) was deflected trying$");
-                avoidType = 11;
+                avoidType = HitType.Deflect;
             else
-                avoidType = 2;
+                avoidType = HitType.Miss;
             end
 
 			initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
@@ -212,10 +251,13 @@ local function _parse(line)
 		end
 
 		-- Sanity check: must have avoided in some manner
-		if (avoidType == 1) then return nil end
+		if (avoidType == HitType.Unknown) then return nil end
 
 		-- Update
-		return 1, initiatorName, targetName, skillName, 0, avoidType, 1, 10;
+		return UpdateType.Damage,
+		    initiatorName, targetName, skillName,
+		    0, avoidType, DamageType.Unknown
+	    ;
 	end
 
     -- ------------------------------------------------------------------------
@@ -231,26 +273,20 @@ local function _parse(line)
 		amount = string.gsub(amount,",","")+0;
 
 		local dmgType = string.match(dmgType,"^(.*)damage$");
-		-- a damage reflect
-		if (dmgType ~= nil) then
-			dmgType = 
-				dmgType == "Common " and 1 or
-				dmgType == "Fire " and 2 or
-				dmgType == "Lightning " and 3 or
-				dmgType == "Frost " and 4 or
-				dmgType == "Acid " and 5 or
-				dmgType == "Shadow " and 6 or
-				dmgType == "Light " and 7 or
-				dmgType == "Beleriand " and 8 or
-				dmgType == "Westernesse " and 9 or
-				dmgType == "Ancient Dwarf-make " and 10 or 11;
+		dmgType = GetDamageType(dmgType)
 
+		-- a damage reflect
+        if dmgType ~= nil then
 			-- Update
-			return 1, initiatorName, targetName, skillName, amount, 1, 1, dmgType;
+			return UpdateType.Damage,
+			    initiatorName, targetName, skillName,
+			    amount, HitType.Regular, dmgType;
 		-- a heal reflect
 		else
 			-- Update
-			return 3, initiatorName, targetName, skillName, amount, 1;
+			return UpdateType.RestoreMorale,
+			    initiatorName, targetName, skillName,
+			    amount, HitType.Regular;
 		end
 	end
 
@@ -263,7 +299,7 @@ local function _parse(line)
 		amount = string.gsub(amount,",","")+0;
 
 		-- the only information we can extract directly is the target and amount
-		return 14, nil, player.name, nil, amount;
+		return UpdateType.Bubble, nil, player.name, nil, amount;
 	end
 
     -- ------------------------------------------------------------------------
@@ -276,7 +312,7 @@ local function _parse(line)
 		targetName = string.gsub(targetName,"^[Tt]he ","");
 
 		-- the only information we can extract directly is the target name
-		return 16, nil, targetName, nil;
+		return UpdateType.Break, nil, targetName, nil;
 	end
 
 	-- 7b) Daze broken
@@ -285,7 +321,7 @@ local function _parse(line)
 		targetName = string.gsub(targetName,"^[Tt]he ","");
 
 		-- the only information we can extract directly is the target name
-		return 16, nil, targetName, nil;
+		return UpdateType.Break, nil, targetName, nil;
 	end
 
 	-- 7c) Fear broken (TODO: Check)
@@ -294,7 +330,7 @@ local function _parse(line)
 		targetName = string.gsub(targetName,"^[Tt]he ","");
 
 		-- the only information we can extract directly is the target name
-		return 16, nil, targetName, nil;
+		return UpdateType.Break, nil, targetName, nil;
 	end
 
     -- ------------------------------------------------------------------------
@@ -308,7 +344,7 @@ local function _parse(line)
 		targetName = string.gsub(targetName,"^[Tt]he ","");
 
 		-- Update
-		return 7, initiatorName, targetName;
+		return UpdateType.Interrupt, initiatorName, targetName;
 	end
 
     -- ------------------------------------------------------------------------
@@ -324,7 +360,7 @@ local function _parse(line)
 		-- NB: Currently ignore corruption name
 
 		-- Update
-		return 8, initiatorName, targetName;
+		return UpdateType.Dispell, initiatorName, targetName;
 	end
 
     -- ------------------------------------------------------------------------
@@ -338,7 +374,7 @@ local function _parse(line)
 		initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 
 		-- Update
-		return 9, initiatorName;
+		return UpdateType.Defeat, initiatorName;
 	end
 
 	-- 10b) Defeat line 2 (mob died)
@@ -348,7 +384,7 @@ local function _parse(line)
 		initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 
 		-- Update
-		return 9, initiatorName;
+		return UpdateType.Defeat, initiatorName;
 	end
 
 	-- 10c) Defeat line 3 (a player was killed or died)
@@ -358,7 +394,7 @@ local function _parse(line)
 		initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 
 		-- Update
-		return 9, initiatorName;
+		return UpdateType.Defeat, initiatorName;
 	end
 
 	-- 10d) Defeat line 4 (you were killed)
@@ -368,7 +404,7 @@ local function _parse(line)
 		initiatorName = player.name;
 
 		-- Update
-		return 9, initiatorName;
+		return UpdateType.Defeat, initiatorName;
 	end
 
 	-- 10e) Defeat line 5 (you died)
@@ -378,7 +414,7 @@ local function _parse(line)
 		initiatorName = player.name;
 
 		-- Update
-		return 9, initiatorName;
+		return UpdateType.Defeat, initiatorName;
 	end
 
 	-- 10f) Defeat line 6 (you killed a mob)
@@ -388,7 +424,7 @@ local function _parse(line)
 		initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 
 		-- Update
-		return 9, initiatorName;
+		return UpdateType.Defeat, initiatorName;
 	end
 
     -- ------------------------------------------------------------------------
@@ -402,7 +438,7 @@ local function _parse(line)
 	  initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
 
 		-- Update
-	  return 10, initiatorName;
+	  return UpdateType.Revive, initiatorName;
 	end
 
 	-- 11b) Revive line 2 (player succumbed)
@@ -412,7 +448,7 @@ local function _parse(line)
 	  initiatorName = string.gsub(initiatorName,"^[Tt]he ","");
   
 		-- Update
-	  return 10, initiatorName;
+	  return UpdateType.Revive, initiatorName;
 	end
 
 	-- 11c) Revive line 3 (you were revived)
@@ -422,7 +458,7 @@ local function _parse(line)
 	  initiatorName = player.name;
   
 		-- Update
-	  return 10, initiatorName;
+	  return UpdateType.Revive, initiatorName;
 	end
 
 	-- 11d) Revive line 4 (you succumbed)
@@ -432,12 +468,17 @@ local function _parse(line)
 	  initiatorName = player.name;
   
 		-- Update
-	  return 10, initiatorName;
+	  return UpdateType.Revive, initiatorName;
 	end
 
 	-- if we reach here, we were unable to parse the line
 	--  (note there is very little that isn't parsed)
-    println("WARNING! Unable to parse: " .. line)
+
+    -- Currently, at least these lines are not parsed:
+    -- "xxx has been cured"
+    -- "Nothing to cure"
+
+    -- println("WARNING! Unable to parse: " .. line)
     return nil;
 end
 

@@ -17,7 +17,7 @@ debugging = true
 -- ****************************************************************************
 
 import "MaKoPlugins.Utils";
-import "MaKoPlugins.ACA.Parser";
+import "MaKoPlugins.ACA.Recording";
 
 local utils   = MaKoPlugins.Utils
 local _plugin = utils.PlugIn()
@@ -33,7 +33,7 @@ local xDEBUG  = function(str) _plugin:xDEBUG(str) end
 -- Obtain & extending player info, ready for using
 -- ----------------------------------------------------------------------------
 
-local player  = Turbine.Gameplay.LocalPlayer:GetInstance();
+player  = Turbine.Gameplay.LocalPlayer:GetInstance();
 -- local effects = player:GetEffects()
 
 -- ****************************************************************************
@@ -64,69 +64,97 @@ Settings = Turbine.PluginData.Load(
 		"ACASettings"
 	) or Settings;
 
---[[ -- Debugging
-Settings.Logging = { 
-    ["Enabled"] = true,
-    ["Events"] = { }
+ProcessLog(Settings.Logging.Events)
+
+totals = Walk(damageTaken, nil, nil, "Tamien")
+
+--[[ **************************************************************************
+-- ****************************************************************************
+
+    What are we interested in?
+
+    * We are interested about the estimated total amount of damage you would
+      have taken, if you would not avoided anything
+
+    * We are interested how much damage was negated by partial and full avoids
+
+    * We are interested, how much partials have lowered crit rate
+
+-- ****************************************************************************
+-- ************************************************************************]]--
+
+hits = totals:Hits()
+
+partials = totals:Partials()
+avoids   = totals:Avoids()
+attempts = {
+    ["count"] = totals.count,
+    ["sum"] = totals.count * hits.average,
+    ["average"] = hits.average
 }
+
+-- ----------------------------------------------------------------------------
+
+println("- - -")
+println("Summary..:")
+
+println(".........: %6.2f%% - %6.2f%%",
+    100.0 * (hits.sum + partials.sum) / attempts.sum,
+    100.0 * (avoids.estimate + partials.estimate - partials.sum) / attempts.sum
+)
+println(".........: %6.2f%% - %6.2f%% / %6.2f%% - %6.2f%%",
+    100.0 * hits.sum / attempts.sum,
+    100.0 * partials.sum / attempts.sum,
+    100.0 * (partials.estimate - partials.sum) / attempts.sum,
+    100.0 * avoids.estimate / attempts.sum
+)
+println(".........: %6.2f%% - %6.2f%% - %6.2f%%",
+    100.0 * hits.count / attempts.count,
+    100.0 * partials.count / attempts.count,
+    100.0 * avoids.count / attempts.count
+)
+
+--[[
+-- ----------------------------------------------------------------------------
+
+println("- - -")
+noncrits   = totals:Summary(HitType.Regular)
+crits      = totals:Summary(HitType.Critical)
+devastates = totals:Summary(HitType.Devastate)
+critdev    = totals:Summary(HitType.Critical, HitType.Devastate)
+
+println("Crit&dev.: %8d %8d", critdev.count, critdev.sum)
+println("- .......: %6.2f%% %6.2f%%",
+    100.0 * critdev.count / hits.count,
+    100.0 * critdev.sum / hits.sum
+)
+println("- Crit mgn: %6.2f%%", 100 * crits.average / noncrits.average)
+println("- Dev mgn.: %6.2f%%", 100 * devastates.average / noncrits.average)
+
 -- ]]--
 
 -- ----------------------------------------------------------------------------
 
-local function SaveSettings()
-	INFO("Saving settings...")
-	Turbine.PluginData.Save(
-		Turbine.DataScope.Character,
-		"ACASettings",
-		Settings
-	)
-end
+println("- - -")
 
--- _plugin:atexit(SaveSettings);
+println("Full avoids")
+
+for _, key in pairs({HitType.Block, HitType.Parry, HitType.Evade, HitType.Resist}) do
+    local summary = totals:Summary(key)
+    println("- %-10s: %6.2f%% - %6.2f%%",
+        HitTypeName[key],
+        100 * summary.count / attempts.count,
+        100 * summary.estimate / attempts.sum
+    )
+end
 
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Analyzer database line
+-- UI
 --
 -- ****************************************************************************
 -- ****************************************************************************
-
-local CombatEvent = class()
-
-function CombatEvent:Constructor(line)
-	self.eventtype, self.actor, self.target, self.skill,
-	    self.var1, self.var2, self.var3, self.var4 = parse(line)
-end
-
--- ----------------------------------------------------------------------------
-
-local function MessageReceived(sender, args)
-    if  args.ChatType ~= Turbine.ChatType.PlayerCombat and
-        args.ChatType ~= Turbine.ChatType.EnemyCombat then
-        return
-    end
-
-    if Settings.Logging.Enabled then
-        table.insert(Settings.Logging.Events, args.Message)
-    end
-
-    event = CombatEvent(args.Message)
-
-end
-
--- ----------------------------------------------------------------------------
-
-function ProcessLog()
-    for k, line in pairs(Settings.Logging.Events) do
-        local event = CombatEvent(line)
-        if event.eventtype ~= nil then
-            DEBUG(event.eventtype .. ": " .. event.actor .. " -> " .. event.target)
-        end
-    end
-end
-
-ProcessLog()
 
 -- ----------------------------------------------------------------------------
 -- Listbox for logged effects
@@ -188,70 +216,48 @@ local loggedlist = LoggedListBox()
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Effect Watch Window: Watch window has specified number of slots to
--- show effects, so that certain effects always appear at specific location
--- in a screen. In future, we might have several different types of watch
--- windows.
+-- Analyzer Window
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
--- ****************************************************************************
--- ****************************************************************************
---
--- Window to browse tracked effects
---
--- ****************************************************************************
--- ****************************************************************************
+AnalyzerWindow = class(Turbine.UI.Lotro.Window);
 
---[[
-LogBrowser = class(Turbine.UI.Lotro.Window);
-
-function LogBrowser:Constructor()
+function AnalyzerWindow:Constructor()
 	Turbine.UI.Lotro.Window.Constructor(self);
 
 	-- ------------------------------------------------------------------------
 	-- Window properties
 	-- ------------------------------------------------------------------------
-	
-	self:SetText("BuffWatch");
-	
+
+	self:SetText("Analyzer");
+
 	-- self:SetMinimumWidth(310);
 	-- self:SetMaximumWidth(310);
 	-- self:SetMinimumHeight(250);
-	
-	-- ------------------------------------------------------------------------
-
-	loggedlist:SetParent(self)
 
 	-- ------------------------------------------------------------------------
 
 	self:SetPosition(
-		Settings.WatchWindowPosition.Left,
-		Settings.WatchWindowPosition.Top
+		Settings.WindowPosition.Left,
+		Settings.WindowPosition.Top
 	)
 	self:SetSize(
 		310, -- Settings.WindowPosition.Width,
-		Settings.WatchWindowPosition.Height
+		Settings.WindowPosition.Height
 	)
-	
+
 	self:SetResizable(true);
 
 	-- ------------------------------------------------------------------------
 
-	RefreshEffects();
-
-	-- ------------------------------------------------------------------------
-
-	self:SetVisible(Settings.WindowVisible);
-	-- self:SetVisible(true);
+	-- self:SetVisible(Settings.WindowVisible);
+	self:SetVisible(true);
 end
 
-function LogBrowser:VisibleChanged(sender, args)
+function AnalyzerWindow:VisibleChanged(sender, args)
 	-- Settings.WindowVisible = self:IsVisible()
 end
-
--- ]]--
 
 -- ----------------------------------------------------------------------------
 -- Layout elements
@@ -268,17 +274,16 @@ end
 -- Save settings on unload
 -- ----------------------------------------------------------------------------
 
---[[
-function LogBrowser:Unload()
+function AnalyzerWindow:Unload()
 
 	-- ------------------------------------------------------------------------
 	-- Store window position & size
 	-- ------------------------------------------------------------------------
 
-	Settings.WatchWindowPosition.Left = self:GetLeft();
-	Settings.WatchWindowPosition.Top = self:GetTop();
-	Settings.WatchWindowPosition.Height = self:GetHeight();
-	Settings.WatchWindowPosition.Width = self:GetWidth();	
+	Settings.WindowPosition.Left = self:GetLeft();
+	Settings.WindowPosition.Top = self:GetTop();
+	Settings.WindowPosition.Height = self:GetHeight();
+	Settings.WindowPosition.Width = self:GetWidth();	
 	-- Settings.WindowVisible = self:IsVisible();
 
 	-- ------------------------------------------------------------------------
@@ -287,18 +292,17 @@ function LogBrowser:Unload()
 
 	Turbine.PluginData.Save(
 		Turbine.DataScope.Character,
-		"BuffWatchSettings",
+		"ACASettings",
 		Settings
 	)
 	self:SetVisible( false );
 end
--- ]]--
 
 -- ----------------------------------------------------------------------------
 -- Create window
 -- ----------------------------------------------------------------------------
 
--- local mainwnd = LogBrowser()
+-- local mainwnd = AnalyzerWindow()
 -- _plugin:atexit(function() mainwnd:Unload() end)
 
 -- ****************************************************************************
@@ -313,12 +317,12 @@ local myCMD = Turbine.ShellCommand();
 
 function myCMD:Execute(cmd, args)
 	if ( args == "show" ) then
-		-- mainwnd:SetVisible( true );
+		mainwnd:SetVisible( true );
 		-- mainwnd:Refresh()
 	elseif ( args == "hide" ) then
-		-- mainwnd:SetVisible( false );
+		mainwnd:SetVisible( false );
 	elseif ( args == "toggle" ) then
-		-- mainwnd:SetVisible( not mainwnd:IsVisible() );
+		mainwnd:SetVisible( not mainwnd:IsVisible() );
 		-- mainwnd:Refresh()
 	else
 		INFO("/aca [show | hide | toggle]")
