@@ -32,7 +32,7 @@ function DamageRecord:Constructor(dealer, skill, target)
 
     self.hits  = { }
     for name, key in pairs(HitType) do
-        self.hits[key] = { ["count"] = 0, ["sum"] = 0 }
+        self.hits[key] = { ["count"] = 0, ["sum"] = 0, ["max"] = 0 }
     end
 
     -- ------------------------------------------------------------------------
@@ -54,6 +54,10 @@ function DamageRecord:UpdateEntry(key, amount, dmgtype)
     self.hits[key].count = self.hits[key].count + 1
     self.hits[key].sum   = self.hits[key].sum + amount
 
+    if self.hits[key].max < amount then self.hits[key].max = amount end
+
+    -- println(dmgtype)
+
     self.dmgtypes[dmgtype] = self.dmgtypes[dmgtype] + amount
 end
 
@@ -67,6 +71,10 @@ function DamageRecord:HitTotal(key)
     return self.hits[key].sum
 end
 
+function DamageRecord:HitMax(key)
+    return self.hits[key].max
+end
+
 function DamageRecord:HitAverage(key)
     return self:EntryTotal(key) / self:EntryCount(key)
 end
@@ -76,11 +84,14 @@ end
 function DamageRecord:Summary(...)
     count = 0
     sum   = 0
+    max   = 0
     estimate = 0
 
     for i, key in ipairs(arg) do
         count = count + self:HitCount(key)
         sum   = sum   + self:HitTotal(key)
+        if max < self:HitMax(key) then max = self:HitMax(key) end
+
         if self.derived ~= nil and self.derived[key] ~= nil then
             estimate = estimate + self.derived[key].estimate
         end
@@ -88,6 +99,7 @@ function DamageRecord:Summary(...)
     return {
         ["count"] = count,
         ["sum"] = sum,
+        ["max"] = max,
         ["average"] = (count > 0) and (sum / count) or 0,
         ["estimate"] = estimate,
     }
@@ -127,6 +139,44 @@ end
 
 -- ----------------------------------------------------------------------------
 
+function DamageRecord:Received()
+    return self:Summary(
+        HitType.Regular,
+        HitType.Critical,
+        HitType.Devastate,
+        HitType.PartialBlock,
+        HitType.PartialParry,
+        HitType.PartialEvade
+    )
+end
+
+function DamageRecord:SumDamageTypes()
+    sum = 0
+    for key, value in pairs(self.dmgtypes) do
+        sum = sum + value
+    end
+    return sum
+end
+
+function DamageRecord:Estimated()
+    local hits = self:Hits()
+    local estimated = {
+        ["count"] = hits.count,
+        ["sum"] = hits.sum,
+    }
+    for key, record in pairs(self.derived) do
+        estimated.count = estimated.count + self.hits[key].count
+        estimated.sum   = estimated.sum + record.estimate
+    end
+    return {
+        ["count"] = estimated.count,
+        ["sum"] = estimated.sum,
+        ["average"] = estimated.count and (estimated.sum / estimated.count) or 0,
+    }
+end
+
+-- ----------------------------------------------------------------------------
+
 function DamageRecord:Update(amount, hittype, dmgtype)
     self.count = self.count + 1
     self:UpdateEntry(hittype, amount, dmgtype)
@@ -151,6 +201,9 @@ function DamageRecord:Merge(record)
     for key,_ in pairs(self.hits) do
         self.hits[key].count = self.hits[key].count + record.hits[key].count
         self.hits[key].sum   = self.hits[key].sum   + record.hits[key].sum
+        if self.hits[key].max < record.hits[key].max then
+            self.hits[key].max = record.hits[key].max
+        end
     end
 
     for key,_ in pairs(self.dmgtypes) do
@@ -189,8 +242,7 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 
-damageDealt = { }
-damageTaken = { }
+damageRecords = { }
 
 local function ProcessEventLine(line)
 
@@ -198,13 +250,8 @@ local function ProcessEventLine(line)
 
     if eventtype == UpdateType.Damage then
 
-        local records = nil
-        if actor == player:GetName() then
-            records = damageDealt
-        else
-            records = damageTaken
-        end
-    
+        local records = damageRecords
+
         if records[actor] == nil then records[actor] = { } end
         if records[actor][skill] == nil then records[actor][skill] = { } end
         if records[actor][skill][target] == nil then
@@ -237,15 +284,23 @@ function ProcessLog(events)
     end
 end
 
-function Merge(tbl, dealers, skills, targets)
+-- ----------------------------------------------------------------------------
+
+function MergeDamage(dealers, skills, targets)
     totals = DamageRecord()
 
-    for dealer, skills in pairs(tbl) do
-        if dealers == nil or dealers[dealer] ~= nil then
-            for skill, targets in pairs(skills) do
-                if skills == nil or skills[skill] ~= nil then
-                    for target, record in pairs(targets) do
-                        if targets == nil or targets[target] ~= nil then
+    local check = function(list, name)
+        if list == nil then return true end
+        if list[name] ~= nil then return true end
+        return false
+    end
+
+    for dealer, skillrecords in pairs(damageRecords) do
+        if check(dealers, dealer) then
+            for skill, targetrecords in pairs(skillrecords) do
+                if check(skills, skill) then
+                    for target, record in pairs(targetrecords) do
+                        if check(targets, target) then
                             totals:Merge(record)
                         end
                     end

@@ -104,6 +104,36 @@ function ScrolledTreeView:SizeChanged(sender, args)
 
 end
 
+function ScrolledTreeView:Expand(expanded)
+
+    if expanded == nil then return end
+
+	local nodes = self:GetNodes()
+	local count = nodes:GetCount();
+
+	for i = 1, count do
+		local node = nodes:Get( i );
+		if node["name"] ~= nil and expanded[node.name] then
+	        -- xDEBUG(node.name .. " expanded: " .. tostring(expanded))
+	        node:Expand()
+	        node:MouseClick()
+		end
+	end
+end
+
+function ScrolledTreeView:ExpandedGroups()
+	local nodes = self:GetNodes()
+	local count = nodes:GetCount();
+    local expanded = { }
+	for i = 1, count do
+		local node = nodes:Get( i );
+		if node["name"] ~= nil then
+		    expanded[node.name] = node:IsExpanded();
+		end
+	end
+	return expanded
+end
+
 -- ----------------------------------------------------------------------------
 
 TreeGroup = class(Turbine.UI.TreeNode)

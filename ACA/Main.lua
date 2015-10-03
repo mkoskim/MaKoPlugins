@@ -9,15 +9,9 @@
 
 debugging = true
 
--- ****************************************************************************
---
--- Planning: First we need combat event line processing. We need logging so
--- that we can use the same data several times.
---
--- ****************************************************************************
+-- ----------------------------------------------------------------------------
 
 import "MaKoPlugins.Utils";
-import "MaKoPlugins.ACA.Recording";
 
 local utils   = MaKoPlugins.Utils
 local _plugin = utils.PlugIn()
@@ -27,6 +21,12 @@ local INFO    = function(str) _plugin:INFO(str) end
 local DEBUG   = function(str) _plugin:DEBUG(str) end
 local xDEBUG  = function(str) _plugin:xDEBUG(str) end
 
+-- ----------------------------------------------------------------------------
+
+import "MaKoPlugins.ACA.Recording";
+import "MaKoPlugins.ACA.RecordView";
+
+-- ****************************************************************************
 -- ****************************************************************************
 
 -- ----------------------------------------------------------------------------
@@ -54,7 +54,8 @@ local Settings = {
     Logging = {
         ["Enabled"] = false,
         ["Events"] = { }
-    }
+    },
+    ExpandedDamageRecordGroups = { },
 }
 
 -- ----------------------------------------------------------------------------
@@ -63,75 +64,6 @@ Settings = Turbine.PluginData.Load(
 		Turbine.DataScope.Character,
 		"ACASettings"
 	) or Settings;
-
-ProcessLog(Settings.Logging.Events)
-
-totals = Walk(damageTaken, nil, nil, "Tamien")
-
-hits = totals:Hits()
-
-partials = totals:Partials()
-avoids   = totals:Avoids()
-attempts = {
-    ["count"] = totals.count,
-    ["sum"] = totals.count * hits.average,
-    ["average"] = hits.average
-}
-
--- ----------------------------------------------------------------------------
-
-println("- - -")
-println("Summary..:")
-
-println(".........: %6.2f%% - %6.2f%%",
-    100.0 * (hits.sum + partials.sum) / attempts.sum,
-    100.0 * (avoids.estimate + partials.estimate - partials.sum) / attempts.sum
-)
-println(".........: %6.2f%% - %6.2f%% / %6.2f%% - %6.2f%%",
-    100.0 * hits.sum / attempts.sum,
-    100.0 * partials.sum / attempts.sum,
-    100.0 * (partials.estimate - partials.sum) / attempts.sum,
-    100.0 * avoids.estimate / attempts.sum
-)
-println(".........: %6.2f%% - %6.2f%% - %6.2f%%",
-    100.0 * hits.count / attempts.count,
-    100.0 * partials.count / attempts.count,
-    100.0 * avoids.count / attempts.count
-)
-
---[[
--- ----------------------------------------------------------------------------
-
-println("- - -")
-noncrits   = totals:Summary(HitType.Regular)
-crits      = totals:Summary(HitType.Critical)
-devastates = totals:Summary(HitType.Devastate)
-critdev    = totals:Summary(HitType.Critical, HitType.Devastate)
-
-println("Crit&dev.: %8d %8d", critdev.count, critdev.sum)
-println("- .......: %6.2f%% %6.2f%%",
-    100.0 * critdev.count / hits.count,
-    100.0 * critdev.sum / hits.sum
-)
-println("- Crit mgn: %6.2f%%", 100 * crits.average / noncrits.average)
-println("- Dev mgn.: %6.2f%%", 100 * devastates.average / noncrits.average)
-
--- ]]--
-
--- ----------------------------------------------------------------------------
-
-println("- - -")
-
-println("Full avoids")
-
-for _, key in pairs({HitType.Block, HitType.Parry, HitType.Evade, HitType.Resist}) do
-    local summary = totals:Summary(key)
-    println("- %-10s: %6.2f%% - %6.2f%%",
-        HitTypeName[key],
-        100 * summary.count / attempts.count,
-        100 * summary.estimate / attempts.sum
-    )
-end
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -223,12 +155,21 @@ function AnalyzerWindow:Constructor()
 
 	-- ------------------------------------------------------------------------
 
+    self.recordview = RecordView()
+    self.recordview:SetParent(self)
+    self.recordview:SetPosition(20, 40)
+    -- self.recordview:SetSize(200, self:GetHeight() - 2*40)
+
+    self.recordview:Expand(Settings.ExpandedDamageRecordGroups) 
+
+	-- ------------------------------------------------------------------------
+
 	self:SetPosition(
 		Settings.WindowPosition.Left,
 		Settings.WindowPosition.Top
 	)
 	self:SetSize(
-		310, -- Settings.WindowPosition.Width,
+		Settings.WindowPosition.Width,
 		Settings.WindowPosition.Height
 	)
 
@@ -236,24 +177,26 @@ function AnalyzerWindow:Constructor()
 
 	-- ------------------------------------------------------------------------
 
-	-- self:SetVisible(Settings.WindowVisible);
-	self:SetVisible(true);
+	self:SetVisible(Settings.WindowVisible);
+	-- self:SetVisible(true);
 end
 
 function AnalyzerWindow:VisibleChanged(sender, args)
-	-- Settings.WindowVisible = self:IsVisible()
+	Settings.WindowVisible = self:IsVisible()
+end
+
+function AnalyzerWindow:SetRecord(record)
+    self.recordview:SetRecord(record)
 end
 
 -- ----------------------------------------------------------------------------
 -- Layout elements
 -- ----------------------------------------------------------------------------
 
---[[
-function LogBrowser:SizeChanged(sender, args)
-	loggedlist:SetPosition(20, 40);
-	loggedlist:SetSize(self:GetWidth()-40, self:GetHeight()-80);
+function AnalyzerWindow:SizeChanged(sender, args)
+	-- loggedlist:SetPosition(20, 40);
+	self.recordview:SetSize(270, self:GetHeight() - 2*40);
 end
--- ]]--
 
 -- ----------------------------------------------------------------------------
 -- Save settings on unload
@@ -268,8 +211,9 @@ function AnalyzerWindow:Unload()
 	Settings.WindowPosition.Left = self:GetLeft();
 	Settings.WindowPosition.Top = self:GetTop();
 	Settings.WindowPosition.Height = self:GetHeight();
-	Settings.WindowPosition.Width = self:GetWidth();	
-	-- Settings.WindowVisible = self:IsVisible();
+	Settings.WindowPosition.Width = self:GetWidth();
+
+	Settings.ExpandedDamageRecordGroups = self.recordview:ExpandedGroups()
 
 	-- ------------------------------------------------------------------------
 	-- Save settings
@@ -287,37 +231,11 @@ end
 -- Create window
 -- ----------------------------------------------------------------------------
 
--- local mainwnd = AnalyzerWindow()
--- _plugin:atexit(function() mainwnd:Unload() end)
+local mainwnd = AnalyzerWindow()
+_plugin:atexit(function() mainwnd:Unload() end)
 
--- ****************************************************************************
--- ****************************************************************************
---
--- Command line interface
---
--- ****************************************************************************
--- ****************************************************************************
-
-local myCMD = Turbine.ShellCommand();
-
-function myCMD:Execute(cmd, args)
-	if ( args == "show" ) then
-		mainwnd:SetVisible( true );
-		-- mainwnd:Refresh()
-	elseif ( args == "hide" ) then
-		mainwnd:SetVisible( false );
-	elseif ( args == "toggle" ) then
-		mainwnd:SetVisible( not mainwnd:IsVisible() );
-		-- mainwnd:Refresh()
-	else
-		INFO("/aca [show | hide | toggle]")
-	end
-end
-
-Turbine.Shell.AddCommand( "aca", myCMD );
-_plugin:atexit(function() Turbine.Shell.RemoveCommand(myCMD) end)
-
-INFO("/aca [show | hide | toggle]" )
+ProcessLog(Settings.Logging.Events)
+mainwnd:SetRecord(MergeDamage(nil, nil, { ["Tamien"] = 1 }))
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -349,3 +267,33 @@ end
 
 InstallHooks()
 _plugin:atexit(UninstallHooks)
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Command line interface
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+local myCMD = Turbine.ShellCommand();
+
+function myCMD:Execute(cmd, args)
+	if ( args == "show" ) then
+		mainwnd:SetVisible( true );
+		-- mainwnd:Refresh()
+	elseif ( args == "hide" ) then
+		mainwnd:SetVisible( false );
+	elseif ( args == "toggle" ) then
+		mainwnd:SetVisible( not mainwnd:IsVisible() );
+		-- mainwnd:Refresh()
+	else
+		INFO("/aca [show | hide | toggle]")
+	end
+end
+
+Turbine.Shell.AddCommand( "aca", myCMD );
+_plugin:atexit(function() Turbine.Shell.RemoveCommand(myCMD) end)
+
+INFO("/aca [show | hide | toggle]" )
+

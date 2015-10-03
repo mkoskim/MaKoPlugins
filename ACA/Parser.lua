@@ -68,28 +68,12 @@ DamageType = {
     ["Unknown"] = 13,
 }
 
-HitTypeName = {
-    [HitType.Regular] = "Regular",
-    [HitType.Critical] = "Critical",
-    [HitType.Devastate] = "Devastating",
-    [HitType.Miss] = "Miss",
-    [HitType.Immune] = "Immune",
-    [HitType.Resist] = "Resist",
-    [HitType.Block] = "Block",
-    [HitType.Parry] = "Parry",
-    [HitType.Evade] = "Evade",
-    [HitType.PartialBlock] = "Partial Block",
-    [HitType.PartialParry] = "Partial Parry",
-    [HitType.PartialEvade] = "Partial Evade",
-    [HitType.Deflect] = "Deflect",
-    [HitType.Unknown] = "Unknown",
-}
-
 -- ****************************************************************************
 -- ****************************************************************************
 
-local function GetDamageType(dmgtype)
-	return 
+local function GetDamageType(dmgType)
+	-- println("<%s>", dmgType)
+	return
 	    dmgType == nil and nil or
 		dmgType == "Common " and DamageType.Common or
 		dmgType == "Fire " and DamageType.Fire or

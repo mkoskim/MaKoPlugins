@@ -539,22 +539,13 @@ function StatBrowser:Constructor()
 	-- ------------------------------------------------------------------------
 	-- Expand groups which were expanded last time
 	-- ------------------------------------------------------------------------
-	
-	local count = nodes:GetCount();
-	for i = 1, count do
-		local node = nodes:Get( i );
-		local expanded = (Settings.ExpandedGroups and Settings.ExpandedGroups[node.name]) or false;
-		if expanded then
-			xDEBUG(node.name .. " expanded: " .. tostring(expanded))
-			node:Expand()
-			node:MouseClick()
-		end
-	end
+
+    self.statlist:Expand(Settings.ExpandedGroups) 
 
 	-- ------------------------------------------------------------------------
 	-- Place window
 	-- ------------------------------------------------------------------------
-	
+
 	self:SetPosition(
 		Settings.WindowPosition.Left,
 		Settings.WindowPosition.Top
@@ -563,13 +554,13 @@ function StatBrowser:Constructor()
 		310, -- Settings.WindowPosition.Width,
 		Settings.WindowPosition.Height
 	)
-	
+
 	self:SetVisible(Settings.WindowVisible);
 
 	-- ------------------------------------------------------------------------
 	-- Update node values
 	-- ------------------------------------------------------------------------
-	
+
 	self:Refresh()
 
 end
@@ -640,22 +631,15 @@ function StatBrowser:Unload()
 	Settings.WindowPosition.Left = self:GetLeft();
 	Settings.WindowPosition.Top = self:GetTop();
 	Settings.WindowPosition.Height = self:GetHeight();
-	Settings.WindowPosition.Width = self:GetWidth();	
-	-- Settings.WindowVisible = self:IsVisible();
+	Settings.WindowPosition.Width = self:GetWidth();
+
 	Settings.ShowPercentages = percentages;
 
 	-- ------------------------------------------------------------------------
 	-- Store groups' expand information
 	-- ------------------------------------------------------------------------
 
-	Settings.ExpandedGroups = { }
-	
-	local nodes = self.statlist:GetNodes()
-	local count = nodes:GetCount();
-	for i = 1, count do
-		local node = nodes:Get( i );
-		Settings.ExpandedGroups[node.name] = node:IsExpanded();
-	end
+	Settings.ExpandedGroups = self.statlist:ExpandedGroups()
 
 	-- ------------------------------------------------------------------------
 	-- Save settings
