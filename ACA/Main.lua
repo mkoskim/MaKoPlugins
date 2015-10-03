@@ -24,7 +24,8 @@ local xDEBUG  = function(str) _plugin:xDEBUG(str) end
 -- ----------------------------------------------------------------------------
 
 import "MaKoPlugins.ACA.Recording";
-import "MaKoPlugins.ACA.RecordView";
+import "MaKoPlugins.ACA.DamageRecordView";
+import "MaKoPlugins.ACA.SkillView";
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -68,63 +69,6 @@ Settings = Turbine.PluginData.Load(
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- UI
---
--- ****************************************************************************
--- ****************************************************************************
-
--- ----------------------------------------------------------------------------
--- Listbox for logged effects
--- ----------------------------------------------------------------------------
-
---[[
-local LoggedNode = class(Turbine.UI.Control)
-
-function LoggedNode:Constructor(logged)
-	Turbine.UI.Control.Constructor(self);
-
-	self.effect = logged
-
-	self:SetSize(200, 34)
-
-	self.icon = Turbine.UI.Control()
-	self.icon:SetParent(self);
-	self.icon:SetBackground( self.effect.icon );
-	self.icon:SetSize(32, 32);
-
-	self.name = Turbine.UI.Label();
-	self.name:SetParent( self );
-	self.name:SetLeft(34 + 5);
-	self.name:SetSize( 200 - 34 - 5, 34 );
-	self.name:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
-	self.name:SetText( self.effect.name );
-end
--- ]]--
-
--- ----------------------------------------------------------------------------
-
---[[
-local LoggedListBox = class(utils.ScrolledListBox)
-
-function LoggedListBox:AddLogged(logged)
-    DEBUG(string.format("Logged: %s", logged.name))
-    self:AddItem(LoggedNode(logged))
-end
-
-function LoggedListBox:Constructor()
-    utils.ScrolledListBox.Constructor(self)
-    
-    for k, v in pairs(Settings.Logging.Effects) do
-        self:AddLogged(v)
-    end
-end
-
-local loggedlist = LoggedListBox()
--- ]]--
-
--- ****************************************************************************
--- ****************************************************************************
---
 -- 
 --
 -- ****************************************************************************
@@ -149,20 +93,22 @@ function AnalyzerWindow:Constructor()
 
 	self:SetText("Analyzer");
 
-	-- self:SetMinimumWidth(310);
-	-- self:SetMaximumWidth(310);
-	-- self:SetMinimumHeight(250);
-
 	-- ------------------------------------------------------------------------
 
     self.recordview = RecordView()
     self.recordview:SetParent(self)
-    self.recordview:SetPosition(20, 40)
-    -- self.recordview:SetSize(200, self:GetHeight() - 2*40)
 
     self.recordview:Expand(Settings.ExpandedDamageRecordGroups) 
 
+    self.skillview = SkillView()
+    self.skillview:SetParent(self)
+
 	-- ------------------------------------------------------------------------
+
+	self:SetMinimumWidth(300 + 5 + 270 + 40);
+	self:SetMinimumHeight(250);
+
+	-- self:SetMaximumWidth(310);
 
 	self:SetPosition(
 		Settings.WindowPosition.Left,
@@ -181,21 +127,29 @@ function AnalyzerWindow:Constructor()
 	-- self:SetVisible(true);
 end
 
+-- ----------------------------------------------------------------------------
+-- Layout elements
+-- ----------------------------------------------------------------------------
+
+function AnalyzerWindow:SizeChanged(sender, args)
+    self.skillview:SetPosition(20, 40)
+    self.skillview:SetSize(300, self:GetHeight() - (40 + 30))
+    self.skillview:SizeChanged(sender, args)
+
+    self.recordview:SetPosition(self:GetWidth() - (270 + 20), 40)
+    self.recordview:SetSize(270, self:GetHeight() - (40 + 30))
+    self.recordview:SizeChanged(sender, args)
+end
+
+-- ----------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------
+
 function AnalyzerWindow:VisibleChanged(sender, args)
 	Settings.WindowVisible = self:IsVisible()
 end
 
 function AnalyzerWindow:SetRecord(record)
     self.recordview:SetRecord(record)
-end
-
--- ----------------------------------------------------------------------------
--- Layout elements
--- ----------------------------------------------------------------------------
-
-function AnalyzerWindow:SizeChanged(sender, args)
-	-- loggedlist:SetPosition(20, 40);
-	self.recordview:SetSize(270, self:GetHeight() - 2*40);
 end
 
 -- ----------------------------------------------------------------------------
@@ -235,7 +189,11 @@ local mainwnd = AnalyzerWindow()
 _plugin:atexit(function() mainwnd:Unload() end)
 
 ProcessLog(Settings.Logging.Events)
-mainwnd:SetRecord(MergeDamage(nil, nil, { ["Tamien"] = 1 }))
+
+utils.showfields(DamageDealers({ ["Tamien"] = 1 }))
+
+-- mainwnd:SetRecord(MergeDamage(nil, nil, { ["Tamien"] = 1 }))
+-- mainwnd:SetRecord(MergeDamage({ ["Tamien"] = 1 }, nil, nil))
 
 -- ****************************************************************************
 -- ****************************************************************************

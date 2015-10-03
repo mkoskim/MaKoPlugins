@@ -284,9 +284,46 @@ function ProcessLog(events)
     end
 end
 
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Collective information gathered from records
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+-- ----------------------------------------------------------------------------
+-- Acquire list of damage dealers to specified targets
 -- ----------------------------------------------------------------------------
 
-function MergeDamage(dealers, skills, targets)
+function DamageDealers(targets)
+
+    dealers = { }
+
+    local check = function(dealer, records)
+        for skill, targetrecords in pairs(records) do
+            for target, record in pairs(targetrecords) do
+                if targets[target] ~= nil then
+                    return true
+                end
+            end
+        end
+    end
+
+    for dealer, skillrecords in pairs(damageRecords) do
+        if check(dealer, skillrecords) then
+            dealers[dealer] = true
+        end
+    end
+
+    return dealers
+end
+
+-- ----------------------------------------------------------------------------
+-- Acquire list of skills to specified targets
+-- ----------------------------------------------------------------------------
+
+function MergeDamageSkills(targets)
     totals = DamageRecord()
 
     local check = function(list, name)

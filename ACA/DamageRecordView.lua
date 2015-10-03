@@ -62,25 +62,25 @@ function StatNode:Constructor( text, fields, key )
 
     if key ~= nil then fields[key] = self end
 
-	self:SetSize( 240, 16 );
+	self:SetSize( 240, 14 );
 
 	self:SetBackColorBlendMode( Turbine.UI.BlendMode.AlphaBlend );
 	self.labelText = Turbine.UI.Label();
 	self.labelText:SetParent( self );
-	self.labelText:SetSize( 120, 16 );
+	self.labelText:SetSize( 110, self:GetHeight() );
 	self.labelText:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
 	self.labelText:SetText( self.text );
 
 	self.labelCount = Turbine.UI.Label();
 	self.labelCount:SetParent( self );
-	self.labelCount:SetSize( 60, 16 );
-	self.labelCount:SetLeft( 120 );
+	self.labelCount:SetLeft( 110 );
+	self.labelCount:SetSize( 60, self:GetHeight() );
 	self.labelCount:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleRight );
 
 	self.labelDamage = Turbine.UI.Label();
 	self.labelDamage:SetParent( self );
-	self.labelDamage:SetSize( 60, 16 );
-	self.labelDamage:SetLeft( 180 );
+	self.labelDamage:SetLeft( 170 );
+	self.labelDamage:SetSize( 70, self:GetHeight() );
 	self.labelDamage:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleRight );
 
 end
