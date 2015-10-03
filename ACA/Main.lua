@@ -68,21 +68,6 @@ ProcessLog(Settings.Logging.Events)
 
 totals = Walk(damageTaken, nil, nil, "Tamien")
 
---[[ **************************************************************************
--- ****************************************************************************
-
-    What are we interested in?
-
-    * We are interested about the estimated total amount of damage you would
-      have taken, if you would not avoided anything
-
-    * We are interested how much damage was negated by partial and full avoids
-
-    * We are interested, how much partials have lowered crit rate
-
--- ****************************************************************************
--- ************************************************************************]]--
-
 hits = totals:Hits()
 
 partials = totals:Partials()

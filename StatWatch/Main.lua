@@ -256,11 +256,11 @@ Stat("TactELM", function()
 -- Stat Node (stat line in listbox)
 -- ----------------------------------------------------------------------------
 
-local StatNode = class( Turbine.UI.TreeNode )
+local StatNode = class( utils.TreeNode )
 
 function StatNode:Constructor( text, key )
 
-	Turbine.UI.TreeNode.Constructor( self );
+	utils.TreeNode.Constructor( self );
 
 	self.text = text
 	if key ~= nil then
@@ -322,34 +322,19 @@ end
 -- Stat Node Separator
 -- ----------------------------------------------------------------------------
 
-local StatSep = class( Turbine.UI.TreeNode )
+local StatSep = class( utils.TreeSeparator )
 
-function StatSep:Constructor()
-
-	Turbine.UI.TreeNode.Constructor( self );
-
-	self:SetSize( 240, 1 );
-	self:SetBackColorBlendMode( Turbine.UI.BlendMode.AlphaBlend );
-
-	-- self.frame = Turbine.UI.Control();
-	-- self.frame:SetParent( self );
-	-- self.frame:SetSize( self:GetSize() );
-	self:SetBackColor( utils.focusColor );
-	
-end
-
-function StatSep:Refresh()
-end
+function StatSep:Refresh() end
 
 -- ----------------------------------------------------------------------------
 -- Stat Group
 -- ----------------------------------------------------------------------------
 
-local StatGroup = class( Turbine.UI.TreeNode )
+local StatGroup = class( utils.TreeGroup )
 
 function StatGroup:Constructor( name, nodes )
 
-	Turbine.UI.TreeNode.Constructor( self );
+    utils.TreeGroup.Constructor(self);
 
 	self.name = name;
 
@@ -361,34 +346,12 @@ function StatGroup:Constructor( name, nodes )
 	self.labelKey:SetSize( 250, 16 );
 	self.labelKey:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
 	self.labelKey:SetText( name );
-	-- self.labelKey:SetMouseVisible( false );
 
-	self.iconExpand = Turbine.UI.Control();
-	self.iconExpand:SetParent( self );
-	self.iconExpand:SetSize( 16, 16 );
-	self.iconExpand:SetBackground( utils.IconExpand );
-	self.iconExpand:SetBlendMode( Turbine.UI.BlendMode.AlphaBlend );
-	-- self.iconExpand:SetMouseVisible( false );
-
-	self:SetBackground( utils.HeaderBackground );
-		
 	local childList = self:GetChildNodes();
 
 	for i = 0, table.getn(nodes) do
 		childList:Add( nodes[i] );
 	end
-
-	self.MouseClick = function( sender, args )
-		local expanded = self:IsExpanded();
-		if expanded then
-			self.iconExpand:SetBackground( utils.IconCollapse );
-		else
-			self.iconExpand:SetBackground( utils.IconExpand );
-		end
-	end
-
-	self:SetVisible( (visible and true) or false )
-
 end
 
 function StatGroup:Refresh()
@@ -396,7 +359,7 @@ function StatGroup:Refresh()
 
 	local childs = self:GetChildNodes();
 	local count = childs:GetCount();
-	
+
 	for i = 1, count do
 		child = childs:Get(i)
 		child:Refresh()
