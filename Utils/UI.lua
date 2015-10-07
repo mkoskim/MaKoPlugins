@@ -35,11 +35,12 @@ function ScrolledListBox:Constructor()
 	self.frame:SetBackColor( focusColor );
 
 	self.scrollbar = Turbine.UI.Lotro.ScrollBar();
-	self.scrollbar:SetParent(self);
+	-- self.scrollbar:SetParent(self);
 	self.scrollbar:SetOrientation(Turbine.UI.Orientation.Vertical);
 	self.scrollbar:SetVisible(true)
 
 	self:SetVerticalScrollBar(self.scrollbar)
+	self:SetBackColor( bgColor );
 end
 
 function ScrolledListBox:SetParent(parent)
@@ -54,6 +55,25 @@ function ScrolledListBox:SizeChanged(sender, args)
 
 	self.scrollbar:SetPosition(self:GetLeft() + self:GetWidth() - 10, self:GetTop())
 	self.scrollbar:SetSize(10, self:GetHeight())
+end
+
+-- ----------------------------------------------------------------------------
+
+ListNode = Turbine.UI.Control
+
+-- ----------------------------------------------------------------------------
+
+ListSeparator = class(Turbine.UI.Control)
+
+function ListSeparator:Constructor()
+
+	Turbine.UI.Control.Constructor( self );
+
+	self:SetSize( 240, 1 );
+	self:SetBackColorBlendMode( Turbine.UI.BlendMode.AlphaBlend );
+
+	self:SetBackColor( focusColor );
+	self:SetEnabled(false);
 end
 
 -- ****************************************************************************
@@ -93,14 +113,13 @@ function ScrolledTreeView:SetParent(parent)
 end
 
 function ScrolledTreeView:SizeChanged(sender, args)
+	-- println("(%d, %d)", self:GetLeft(), self:GetTop())
+
 	self.frame:SetPosition(self:GetLeft() - 2, self:GetTop() - 2)
 	self.frame:SetSize(self:GetWidth() + 4, self:GetHeight() + 4 )
 
 	self.scrollbar:SetPosition(self:GetLeft() + self:GetWidth() - 10, self:GetTop())
 	self.scrollbar:SetSize(10, self:GetHeight())
-
-    -- self.scrollbar:SetPosition( self:GetWidth() - 30, 40 );
-    -- self.scrollbar:SetSize( 10, self:GetHeight() - 80 );
 
 end
 

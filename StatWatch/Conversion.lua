@@ -77,8 +77,9 @@ local segments = {
 		Segment(20, 300, 75),
 		Segment(40, 300, 200),
 		Segment(20, 300, 75),
+		Segment(20, 300, 75),
+		Segment(20, 300, 75),
 		Segment(20, 300, 75)
-		-- ... Repeats
 	},
 	["OutHeals"] = {
 		Segment(30, 1190/3, 170),
@@ -125,6 +126,7 @@ local hascap = Set{
 	"CritRate",
 	"DevRate",
 	"Finesse",
+    "Mastery",
 	"OutHeals",
 	"Resistance",
 	"IncHeals",

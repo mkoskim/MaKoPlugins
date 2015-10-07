@@ -115,19 +115,3 @@ function RemoveCallback(object, event, callback)
     end
 end
 
--- ****************************************************************************
-
-function FormatNumber(number, decimals)
-
-	if number < 1000 then
-		return string.format("%." .. tostring(decimals or 0) .. "f", number)
-	-- elseif number < 1000 then
-	--	return string.format("%.0f", number)
-	elseif number < 900000 then
-		return string.format("%d,%03d", (number+0.5)/1000, (number+0.5)%1000)
-	else
-		return string.format("%.3fM", number/1e6)
-	end
-
-end
-
