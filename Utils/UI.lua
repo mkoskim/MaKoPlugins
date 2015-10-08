@@ -112,7 +112,7 @@ function ScrolledTreeView:SetParent(parent)
     self.scrollbar:SetParent(parent)
 end
 
-function ScrolledTreeView:SizeChanged(args)
+function ScrolledTreeView:SizeChanged(sender, args)
 	-- println("(%d, %d)", self:GetLeft(), self:GetTop())
 
 	self.frame:SetPosition(self:GetLeft() - 2, self:GetTop() - 2)
@@ -120,7 +120,6 @@ function ScrolledTreeView:SizeChanged(args)
 
 	self.scrollbar:SetPosition(self:GetLeft() + self:GetWidth() - 10, self:GetTop())
 	self.scrollbar:SetSize(10, self:GetHeight())
-
 end
 
 function ScrolledTreeView:Expand(expanded)
@@ -233,15 +232,17 @@ function ScrolledTextBox:SetParent(parent)
     self.scrollbar:SetParent(parent)
 end
 
-function ScrolledTextBox:SizeChanged(args)
-	-- println("(%d, %d) %d x %d", self:GetLeft(), self:GetTop(), self:GetWidth(), self:GetHeight())
-
+function ScrolledTextBox:SetPosition(x, y)
+	Turbine.UI.TextBox.SetPosition(self, x, y)
 	self.frame:SetPosition(self:GetLeft() - 2, self:GetTop() - 2)
-	self.frame:SetSize(self:GetWidth() + 4, self:GetHeight() + 4 )
+	self.scrollbar:SetPosition(self:GetLeft() + self:GetWidth() - 10, self:GetTop())
+end
 
+function ScrolledTextBox:SetSize(w, h)
+	Turbine.UI.TextBox.SetSize(self, w, h)
+
+	self.frame:SetSize(self:GetWidth() + 4, self:GetHeight() + 4 )
 	self.scrollbar:SetPosition(self:GetLeft() + self:GetWidth() - 10, self:GetTop())
 	self.scrollbar:SetSize(10, self:GetHeight())
 end
-
-ScrolledTextBox.PositionChanged = ScrolledTextBox.SizeChanged
 

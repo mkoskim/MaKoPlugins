@@ -479,7 +479,7 @@ end
 -- Layouting
 -- ----------------------------------------------------------------------------
 
-function StatShareWindow:SizeChanged( sender, args )
+function StatShareWindow:SizeChanged( args )
 
 	self.textbox:SetPosition( 20, 40 );
 	self.textbox:SetSize(
