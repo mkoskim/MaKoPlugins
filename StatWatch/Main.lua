@@ -668,7 +668,10 @@ function StatBrowser:Constructor()
 	self.refreshbtn:SetText( "Refresh" );
 	self.refreshbtn.Click = function() 
 		self:Refresh();
+		if self.sharewindow:IsVisible() then
+		    self.sharewindow:Refresh()
 		end
+	end
 
 	self.formatbtn = utils.DropDown({"#", "%"});
 	self.formatbtn:SetParent( self );
@@ -676,7 +679,7 @@ function StatBrowser:Constructor()
 	self.formatbtn.ItemChanged = function(sender, args) 
 		percentages = (args.Index == 2)
 		self:Refresh();
-		end
+	end
 
 	self.referencebtn = utils.DropDown({"", "Set", "Cap"});
 	self.referencebtn:SetParent( self );
@@ -685,7 +688,7 @@ function StatBrowser:Constructor()
 		callbacks = { ClearReference, SetReference, SetCapReference };
 		callbacks[args.Index]();
 		self:Refresh();
-		end
+	end
 
 	-- ------------------------------------------------------------------------
 	-- Fill in groups & stat nodes
