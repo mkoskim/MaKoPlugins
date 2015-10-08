@@ -863,7 +863,7 @@ function StatBrowser:SizeChanged( sender, args )
 		40 + 120,
 		self:GetHeight() - 32
 	);
-	
+
 	self.formatbtn:SetWidth( 60 );
 	self.formatbtn:SetPosition(
 		40 + 180,
@@ -873,7 +873,7 @@ function StatBrowser:SizeChanged( sender, args )
 end
 
 function StatBrowser:VisibleChanged(args)
-	DEBUG("Hey!")
+	-- DEBUG("Hey!")
 	Settings.WindowVisible = self:IsVisible()
 end
 
