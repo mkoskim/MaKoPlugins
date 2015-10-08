@@ -872,7 +872,8 @@ function StatBrowser:SizeChanged( sender, args )
 
 end
 
-function StatBrowser:VisibleChanged(sender, args)
+function StatBrowser:VisibleChanged(args)
+	DEBUG("Hey!")
 	Settings.WindowVisible = self:IsVisible()
 end
 
