@@ -112,7 +112,7 @@ function ScrolledTreeView:SetParent(parent)
     self.scrollbar:SetParent(parent)
 end
 
-function ScrolledTreeView:SizeChanged(sender, args)
+function ScrolledTreeView:SizeChanged(args)
 	-- println("(%d, %d)", self:GetLeft(), self:GetTop())
 
 	self.frame:SetPosition(self:GetLeft() - 2, self:GetTop() - 2)
@@ -203,4 +203,45 @@ function TreeSeparator:Constructor()
 	-- self.frame:SetSize( self:GetSize() );
 	self:SetBackColor( focusColor );
 end
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- TextBox with ScrollBar (and frame)
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+ScrolledTextBox = class(Turbine.UI.TextBox)
+
+function ScrolledTextBox:Constructor()
+	Turbine.UI.TextBox.Constructor(self)
+
+	self.frame = Turbine.UI.Control()
+	self.frame:SetBackColor( focusColor );
+
+	self.scrollbar = Turbine.UI.Lotro.ScrollBar();
+	self.scrollbar:SetOrientation(Turbine.UI.Orientation.Vertical);
+	self:SetVerticalScrollBar(self.scrollbar)
+
+	self:SetBackColor( bgColor );
+end
+
+function ScrolledTextBox:SetParent(parent)
+    self.frame:SetParent(parent)
+    Turbine.UI.TextBox.SetParent(self, parent)
+    self.scrollbar:SetParent(parent)
+end
+
+function ScrolledTextBox:SizeChanged(args)
+	-- println("(%d, %d) %d x %d", self:GetLeft(), self:GetTop(), self:GetWidth(), self:GetHeight())
+
+	self.frame:SetPosition(self:GetLeft() - 2, self:GetTop() - 2)
+	self.frame:SetSize(self:GetWidth() + 4, self:GetHeight() + 4 )
+
+	self.scrollbar:SetPosition(self:GetLeft() + self:GetWidth() - 10, self:GetTop())
+	self.scrollbar:SetSize(10, self:GetHeight())
+end
+
+ScrolledTextBox.PositionChanged = ScrolledTextBox.SizeChanged
 

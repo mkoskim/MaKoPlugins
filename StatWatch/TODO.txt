@@ -11,6 +11,9 @@ DONE:
 
 - DONE: Colors for differences
 
+- DONE: Mastery is nowadays capped at 80k (200%). Mastery percentage
+  calculation has no repeating block
+
 -------------------------------------------------------------------------------
 
 MISC:
@@ -35,4 +38,3 @@ MISC:
 
 FIX:
 
-- Mastery percentage calculation has no repeating block

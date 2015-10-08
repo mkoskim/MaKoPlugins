@@ -14,7 +14,13 @@ local println = MaKoPlugins.Utils.println
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Recorded damage:
+-- Recorded damage: Who deals damage to whom, and by what skill? Hit types
+-- (regular, critical, partial parry, resisted) are counted separately. Also,
+-- damage types from skills are counted separately.
+--
+-- The sum of dealt damage from hit types and damage types should equal. By
+-- default, one skill makes one specific damage type. We have separate entries
+-- which are used when making merged records for summaries.
 --
 -- ****************************************************************************
 -- ****************************************************************************
@@ -26,7 +32,6 @@ function DamageRecord:Constructor(dealer, skill, target)
     self.dealer = dealer
     self.skill = skill
     self.target = target
-    self.count = 0
 
     -- ------------------------------------------------------------------------
 
@@ -76,9 +81,11 @@ function DamageRecord:HitMax(key)
 end
 
 function DamageRecord:HitAverage(key)
-    return self:EntryTotal(key) / self:EntryCount(key)
+    return self:HitTotal(key) / self:HitCount(key)
 end
 
+-- ----------------------------------------------------------------------------
+-- Compute summary record from hit type records: args = hit types to include
 -- ----------------------------------------------------------------------------
 
 function DamageRecord:Summary(...)
@@ -87,7 +94,7 @@ function DamageRecord:Summary(...)
     max   = 0
     estimate = 0
 
-    for i, key in ipairs(arg) do
+    for _, key in ipairs(arg) do
         count = count + self:HitCount(key)
         sum   = sum   + self:HitTotal(key)
         if max < self:HitMax(key) then max = self:HitMax(key) end
@@ -137,8 +144,6 @@ function DamageRecord:Avoids()
     )
 end
 
--- ----------------------------------------------------------------------------
-
 function DamageRecord:Received()
     return self:Summary(
         HitType.Regular,
@@ -150,6 +155,8 @@ function DamageRecord:Received()
     )
 end
 
+-- ----------------------------------------------------------------------------
+
 function DamageRecord:SumDamageTypes()
     sum = 0
     for key, value in pairs(self.dmgtypes) do
@@ -157,6 +164,10 @@ function DamageRecord:SumDamageTypes()
     end
     return sum
 end
+
+-- ----------------------------------------------------------------------------
+-- Estimate the amount of total damage w/o avoidances
+-- ----------------------------------------------------------------------------
 
 function DamageRecord:Estimated()
     local hits = self:Hits()
@@ -178,7 +189,7 @@ end
 -- ----------------------------------------------------------------------------
 
 function DamageRecord:Update(amount, hittype, dmgtype)
-    self.count = self.count + 1
+    -- self.count = self.count + 1
     self:UpdateEntry(hittype, amount, dmgtype)
 end
 
@@ -192,11 +203,15 @@ end
 
 function DamageRecord:Merge(record)
 
+    -- ------------------------------------------------------------------------
+    -- Clear identify fields that differ from record to record
+    -- ------------------------------------------------------------------------
+
     if self.dealer ~= nil and self.dealer ~= record.dealer then self.dealer = nil end
     if self.target ~= nil and self.target ~= record.target then self.target = nil end
     if self.skill ~= nil  and self.skill  ~= record.skill  then self.skill = nil end
 
-    self.count = self.count + record.count
+    -- ------------------------------------------------------------------------
 
     for key,_ in pairs(self.hits) do
         self.hits[key].count = self.hits[key].count + record.hits[key].count
@@ -209,6 +224,11 @@ function DamageRecord:Merge(record)
     for key,_ in pairs(self.dmgtypes) do
         self.dmgtypes[key] = self.dmgtypes[key] + record.dmgtypes[key]
     end
+
+    -- ------------------------------------------------------------------------
+    -- Estimation: compute the average damage from successful hits, then
+    -- multiply it with recorded number of avoids.
+    -- ------------------------------------------------------------------------
 
     if self.derived == nil then
         self.derived = {
@@ -239,12 +259,15 @@ end
 --
 -- Analyzer database management
 --
+-- TODO: Separate friends and foes.
+--
 -- ****************************************************************************
 -- ****************************************************************************
 
 damageRecords = { }
+healRecords = { }
 
-local function ProcessEventLine(line)
+local function ProcessEventLine(channel, line)
 
 	local eventtype, actor, target, skill, var1, var2, var3 = parse(line)
 
@@ -270,17 +293,17 @@ local function MessageReceived(sender, args)
     end
 
     if Settings.Logging.Enabled then
-        table.insert(Settings.Logging.Events, args.Message)
+        table.insert(Settings.Logging.Events, args)
     end
 
-    ProcessEventLine(args.Message)
+    ProcessEventLine(args.ChatType, args.Message)
 end
 
 -- ----------------------------------------------------------------------------
 
 function ProcessLog(events)
     for k, line in ipairs(events) do
-        ProcessEventLine(line)
+        ProcessEventLine(nil, line)
     end
 end
 
@@ -296,7 +319,7 @@ end
 -- Acquire list of damage dealers to specified targets
 -- ----------------------------------------------------------------------------
 
-function DamageDealers(targets)
+function GetDamageDealers(targets)
 
     dealers = { }
 
@@ -311,7 +334,7 @@ function DamageDealers(targets)
     end
 
     for dealer, skillrecords in pairs(damageRecords) do
-        if check(dealer, skillrecords) then
+        if targets == nil or check(dealer, skillrecords) then
             dealers[dealer] = true
         end
     end
@@ -323,7 +346,7 @@ end
 -- Acquire list of skills to specified targets
 -- ----------------------------------------------------------------------------
 
-function MergeDamageSkills(targets)
+function MergeDamage(dealers, skills, targets)
     totals = DamageRecord()
 
     local check = function(list, name)

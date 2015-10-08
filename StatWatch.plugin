@@ -3,7 +3,7 @@
     <Information>
         <Name>MaKo: StatWatch</Name>
         <Author>MaKo</Author>
-        <Version>0.5</Version>
+        <Version>0.6</Version>
         <Description>Track stats in real time</Description>
     </Information>
     <Package>MaKoPlugins.StatWatch.Main</Package>

@@ -24,7 +24,6 @@ PlugIn = class()
 function PlugIn:Constructor()
 	self._atexit = {}
 	self.name = plugin:GetName()
-    self:INFO("Loading")
 	plugin.Unload = function()
 		self:INFO("Unloading...")
 		self:atexit_execute()
@@ -39,7 +38,7 @@ function PlugIn:INFO(fmt, ...)
 
 function PlugIn:DEBUG(fmt, ...)
 	if debugging then
-		self:INFO("DEBUG: " .. str, unpack(arg))
+		self:INFO("DEBUG: " .. fmt, unpack(arg))
 		end
 	end
 

@@ -7,10 +7,11 @@
 -- ****************************************************************************
 
 import "MaKoPlugins.Utils";
+import "MaKoPlugins.ACA.Utils";
 
 local utils = MaKoPlugins.Utils
 local println = utils.println
-local fmtnum = utils.FormatNumber
+local fmtnum = FormatNumber
 
 -- ----------------------------------------------------------------------------
 -- ----------------------------------------------------------------------------
@@ -181,35 +182,37 @@ function RecordView:Constructor()
 	nodes:Add(
 		StatGroup( "Received",
 			StatNode("Non-crits", self.fields, "Received.NonCrits"),
-			StatNode("Partials", self.fields, "Received.Partials"),
 			StatSep(),
 			StatNode("Crits & Devs", self.fields, "Received.CritNDevs"),
 			StatNode("- Criticals", self.fields, "Received.Criticals"),
 			StatNode("- Devastates", self.fields, "Received.Devastates"),
 			StatSep(),
-			StatNode("", self.fields, "Received.Total"),
+			StatNode("Partials", self.fields, "Received.Partials"),
+			StatSep(),
+			StatNode("Total", self.fields, "Received.Total"),
 			nil
 		)
 	);
 
 	nodes:Add(
 		StatGroup( "Peak",
-			StatNode("Partials", self.fields, "Peak.Partials"),
 			StatNode("Non-crits", self.fields, "Peak.NonCrits"),
 			StatNode("Criticals", self.fields, "Peak.Criticals"),
 			StatNode("Devastates", self.fields, "Peak.Devastates"),
-			StatSep(),
-			StatNode("", self.fields, "Peak.Summary"),
+			StatNode("Partials", self.fields, "Peak.Partials"),
+			-- StatSep(),
+			-- StatNode("", self.fields, "Peak.Summary"),
 			nil
 		)
 	);
 
 	nodes:Add(
 		StatGroup( "Estimated",
-		    StatNode("Received", self.fields, "Estimated.ReceivedFull"),
-		    StatNode("Partial taken", self.fields, "Estimated.ReceivedPartial"),
-		    StatNode("Partial avoid", self.fields, "Estimated.AvoidedPartial"),
-		    StatNode("Avoided", self.fields, "Estimated.AvoidedFull"),
+		    StatNode("Received", self.fields, "Estimated.Received"),
+		    StatNode("Partials", self.fields, "Estimated.Partial"),
+		    StatNode("Avoided", self.fields, "Estimated.Avoided"),
+		    StatSep(),
+		    StatNode("", self.fields, "Estimated.Total"),
 		    nil
 		)
     );
@@ -316,11 +319,11 @@ function RecordView:SetRecord(record)
 
     -- Peak damage info
     
-    self.fields["Peak.Partials"]:Set(fmtnum(partials.average), fmtnum(partials.max))
-    self.fields["Peak.NonCrits"]:Set(fmtnum(regular.average), fmtnum(regular.max))
-    self.fields["Peak.Criticals"]:Set(fmtnum(crits.average), fmtnum(crits.max))
-    self.fields["Peak.Devastates"]:Set(fmtnum(devastates.average), fmtnum(devastates.max))
-    self.fields["Peak.Summary"]:Set(fmtnum(received.average), fmtnum(received.max))
+    self.fields["Peak.Partials"]:Set("", fmtnum(partials.max))
+    self.fields["Peak.NonCrits"]:Set("", fmtnum(regular.max))
+    self.fields["Peak.Criticals"]:Set("", fmtnum(crits.max))
+    self.fields["Peak.Devastates"]:Set("", fmtnum(devastates.max))
+    -- self.fields["Peak.Summary"]:Set("", fmtnum(received.max))
 
     -- Avoided damage info (estimations)
 
@@ -329,22 +332,25 @@ function RecordView:SetRecord(record)
         fmtnum(estimated.sum)
     ) ]]--
 
-    self.fields["Estimated.ReceivedFull"]:Set(
-        string.format("%s %%", fmtnum(100 * hits.count / estimated.count, 1)),
-        string.format("%s %%", fmtnum(100 * hits.sum / estimated.sum, 1))
+    self.fields["Estimated.Received"]:Set(
+        -- string.format("%s %%", fmtnum(100 * hits.count / estimated.count, 1)),
+        string.format("%s %%", fmtnum(100 * hits.sum / estimated.sum, 1)),
+        ""
     )
-    self.fields["Estimated.ReceivedPartial"]:Set(
-        string.format("%s %%", fmtnum(100 * partials.count / estimated.count, 1)),
-        string.format("%s %%", fmtnum(100 * partials.sum / estimated.sum, 1))
-    )
-    self.fields["Estimated.AvoidedPartial"]:Set(
-        "",
+    self.fields["Estimated.Partial"]:Set(
+        -- string.format("%s %%", fmtnum(100 * partials.count / estimated.count, 1)),
+        string.format("%s %%", fmtnum(100 * partials.sum / estimated.sum, 1)),
         string.format("%s %%", fmtnum(100 * (partials.estimate - partials.sum) / estimated.sum, 1))
     )
-    self.fields["Estimated.AvoidedFull"]:Set(
-        string.format("%s %%", fmtnum(100 * avoids.count / estimated.count, 1)),
+    self.fields["Estimated.Avoided"]:Set(
+        "", -- string.format("%s %%", fmtnum(100 * avoids.count / estimated.count, 1)),
         string.format("%s %%", fmtnum(100 * avoids.estimate / estimated.sum, 1))
     )
+    self.fields["Estimated.Total"]:Set(
+        string.format("%s %%", fmtnum(100 * (hits.sum + partials.sum) / estimated.sum, 1)),
+        string.format("%s %%", fmtnum(100 * (partials.estimate - partials.sum + avoids.estimate) / estimated.sum, 1))
+    )
+
 
     -- Avoided hits info
 
