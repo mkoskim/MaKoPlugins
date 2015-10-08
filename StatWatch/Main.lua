@@ -153,11 +153,11 @@ end
 
 function Stat:DiffAsString()
 	if self.refvalue == nil then return "" end
-	diff = self:Value() - self.refvalue
+	diff = self:Rating() - self.refvalue
 	if math.abs(diff) < 0.1 then
 		return ""
 	elseif percentages and self.percentage then
-		diff = self:AsPercent() - ToPercent( self.percentage, self.refvalue, player:GetLevel() )
+		diff = self:Percentage() - ToPercent( self.percentage, self.refvalue, player:GetLevel() )
 		return FormatPercentageInc(diff)
 	else
 		return self.fmt(diff)
@@ -789,7 +789,7 @@ function StatBrowser:Constructor()
 		)
 	);
 
-	nodes:Add(
+	--[[ nodes:Add(
 		StatGroup( "Experimental",
 			{
 				StatNode("Self-heal", "SelfHeal"),
@@ -799,7 +799,7 @@ function StatBrowser:Constructor()
 				StatNode("- Tactical Damage", "TactELM"),
 			}
 		)
-	);
+	); -- ]]--
 
 	-- ------------------------------------------------------------------------
 	-- Expand groups which were expanded last time
