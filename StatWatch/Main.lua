@@ -828,6 +828,9 @@ function StatBrowser:Constructor()
 
 	self:Refresh()
 
+    self.VisibleChanged = function(sender, args)
+	    Settings.WindowVisible = self:IsVisible()
+	end
 end
 
 -- ----------------------------------------------------------------------------
@@ -870,11 +873,6 @@ function StatBrowser:SizeChanged( sender, args )
 		self:GetHeight() - 32
 	);
 
-end
-
-function StatBrowser:VisibleChanged(args)
-	-- DEBUG("Hey!")
-	Settings.WindowVisible = self:IsVisible()
 end
 
 -- ----------------------------------------------------------------------------

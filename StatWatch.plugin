@@ -3,29 +3,10 @@
 <Name>MaKo: StatWatch</Name>
 <Author>MaKo</Author>
 <Version>0.6</Version>
-<Description>StatWatch is a plugin to track stats in real time (swapping gear pieces or getting buffs), and share your stats with your friends.
+<Description>
+StatWatch is a plugin to track stats in real time (swapping gear pieces or getting buffs), and share your stats with your friends.
 
-DISCLAIMER: As there is no API functions to retrieve stat percentages, there is no reliable way to see percentage bonuses over your stats. This plugin uses conversion equations (see lotro-wiki) to convert plain ratings to percentages.
-
-After loading, you can show/hide main window with command:
-
-    /stats toggle
-
-You create shortcut to your quickslots for quick access.
-
-MAIN WINDOW: In main window you have a list of stats in groups. At the bottom of the window there is four buttons / dropdown menus:
-
-* Refresh - Manual refresh as not all changes can be tracked (e.g. trait changes)
-    
-* Share - Opens window to share stats
-    
-* Reference dropdown - this sets reference for comparing: empty to clear reference, 'Set' to set your current stats as reference, and 'Cap' to compare your stats to rating caps.
-
-* Format dropdown - this sets format, either '%' for percentages or '#' for plain ratings.
-
-SHARING: Open sharing window by pressing 'Share' button. Stats are converted to plain text to text box, where you can edit what you want to share. When you are satisfied, choose output channel from dropdown. If you want to send stats as /tell, write recipient to text field.
-
-Pressing 'Create' button will create you a shortcut, and pressing it will send the stats to chosen channel.
+WEBSITE: https://github.com/mkoskim/MaKoPlugins
 </Description>
 </Information>
 <Package>MaKoPlugins.StatWatch.Main</Package>

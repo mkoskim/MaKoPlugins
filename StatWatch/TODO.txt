@@ -14,6 +14,10 @@ DONE:
 - DONE: Mastery is nowadays capped at 80k (200%). Mastery percentage
   calculation has no repeating block
 
+- DONE: Dump stats to chat
+  
+- Fixed: Autoloading
+
 -------------------------------------------------------------------------------
 
 MISC:
@@ -21,11 +25,9 @@ MISC:
 - 'Essence' values? Divide stat by corresponding greater essence rating, so
   that you could estimate how many essences you would need to reach the rating.
 
-- Dump stats to chat
-  
 - No update when minimized / group is collapsed
 
-- Separate window for real time stat tracking
+- Separate window for real time stat tracking?
 
 - Different window setups?
 
