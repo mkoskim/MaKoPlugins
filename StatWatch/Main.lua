@@ -283,6 +283,288 @@ Stat("TactELM", function()
 -- ****************************************************************************
 -- ****************************************************************************
 --
+-- Share window: This is bit hairy. We need to create a shortcut, which
+-- contains alias, which contains command to send a line to correct
+-- channel.
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+StatShareGroup = class(utils.TreeGroup)
+
+function StatShareGroup:Constructor(name)
+    utils.TreeGroup.Constructor(self);
+
+	self:SetSize( 270, 16 );
+
+	self.labelKey = Turbine.UI.Label();
+	self.labelKey:SetParent( self );
+	self.labelKey:SetLeft( 20 );
+	self.labelKey:SetSize( 250, 16 );
+	self.labelKey:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
+	self.labelKey:SetText( name );
+
+    self.node = utils.TreeNode()
+
+    self.textbox = Turbine.UI.TextBox()
+    self.textbox:SetParent(self.node)
+	self.textbox:SetFont(Turbine.UI.Lotro.Font.Verdana14);
+    self.textbox:SetMultiline(true)
+    self.textbox:SetReadOnly(true)
+    self.textbox:SetSelectable(true)
+
+    self:GetChildNodes():Add(self.node)
+end
+
+function StatShareGroup:SetText(text)
+    local lines = select(2, text:gsub('\n', '\n')) + 1
+
+    self.node:SetSize(240, 14 * lines + 4)
+    self.textbox:SetSize(self.node:GetWidth(), self.node:GetHeight())
+    self.textbox:SetText(text)
+end
+
+function StatShareGroup:GetText()
+    return self.textbox:GetText()
+end
+
+-- ----------------------------------------------------------------------------
+
+StatShareWindow = class(Turbine.UI.Lotro.Window)
+
+function StatShareWindow:Constructor()
+	Turbine.UI.Lotro.Window.Constructor(self);
+
+	self:SetText("Share stats");
+	self:SetResizable(true);
+
+    -- ------------------------------------------------------------------------
+
+    self.chooser = utils.ScrolledTreeView()
+    self.chooser:SetParent(self)
+
+    self.groups = {
+        ["MoralePower"] = StatShareGroup("Morale & Power"),
+        ["Regen"] = StatShareGroup("In-combat Regen"),
+        ["BasicStats"] = StatShareGroup("Basic Stats"),
+        ["Offence"] = StatShareGroup("Offence"),
+        ["Defence"] = StatShareGroup("Defence"),
+        ["Avoidance"] = StatShareGroup("Avoidance"),
+        ["Mitigations"] = StatShareGroup("Mitigations"),
+    }
+
+    self.order = {
+        "MoralePower", "Regen",
+        "BasicStats",
+        "Offence",
+        "Defence", "Avoidance", "Mitigations"
+    }
+
+    for _, key in pairs(self.order) do
+        local group = self.groups[key]
+        self.chooser:GetNodes():Add( group )
+        group:SetExpanded(false)
+    end
+
+    -- ------------------------------------------------------------------------
+
+	self.channelbtn = utils.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
+	self.channelbtn:SetParent( self );
+
+    self.namebox = utils.ScrolledTextBox() -- Turbine.UI.TextBox()
+    self.namebox:SetParent(self)
+    self.namebox:SetMultiline(false)
+	self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
+    self.namebox:SetText("")
+
+	self.sendbtn = Turbine.UI.Lotro.Quickslot();
+	self.sendbtn:SetParent( self );
+	self.sendbtn:SetAllowDrop(false);
+
+    self.createbtn = Turbine.UI.Lotro.Button()
+	self.createbtn:SetParent( self );
+    self.createbtn:SetText("Create")
+    self.createbtn.MouseClick = function(sender, args)
+        local channel = self.channelbtn:GetText()
+        local target = (channel == "/tell") and self.namebox:GetText() or ""
+        
+        local text = { }
+        for _, key in pairs(self.order) do
+            local group = self.groups[key]
+            if group:IsExpanded() then
+                table.insert(text, group:GetText())
+            end
+        end
+
+        text = table.concat(text, "\n- - - - - - - - - - - - - - - - - - -\n")
+
+        self.sendbtn:SetShortcut(Turbine.UI.Lotro.Shortcut(
+            Turbine.UI.Lotro.ShortcutType.Alias,
+            string.format("%s %s Stats:\n%s", channel, target, text)
+        ))
+    end
+
+
+    -- ------------------------------------------------------------------------
+
+	if Settings["ShareWindowPosition"] == nil then
+	    Settings["ShareWindowPosition"] = DefaultSettings["ShareWindowPosition"]
+	end
+
+	self:SetPosition(
+		Settings.ShareWindowPosition.Left,
+		Settings.ShareWindowPosition.Top
+	)
+	self:SetSize(
+		310, -- Settings.WindowPosition.Width,
+		Settings.ShareWindowPosition.Height
+	)
+
+    self:SetVisible(false)
+end
+
+-- ----------------------------------------------------------------------------
+-- Layouting
+-- ----------------------------------------------------------------------------
+
+function StatShareWindow:SizeChanged( args )
+
+	self.chooser:SetPosition( 20, 40 );
+	self.chooser:SetSize(
+	    self:GetWidth() - 2*20,
+	    self:GetHeight() - (40 + 60)
+    );
+
+    -- ------------------------------------------------------------------------
+
+    local btntop = self:GetHeight() - (40 + 60) + 40 + 5
+
+	self.channelbtn:SetWidth(60);
+	self.channelbtn:SetPosition(20, btntop + 10)
+
+	self.namebox:SetSize(
+	    self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 40) - 20,
+	    18
+	);
+	self.namebox:SetPosition(20 + 65, btntop + 10)
+
+    -- ------------------------------------------------------------------------
+
+	self.createbtn:SetSize( 60, 18 );
+	self.createbtn:SetPosition(
+		self:GetWidth() - 60 - 40 - 25,
+		btntop + 10
+	);
+
+	self.sendbtn:SetSize( 40, 40 );
+	self.sendbtn:SetPosition(
+	    self:GetWidth()  - 40 - 20,
+		btntop
+	);
+end
+
+-- ----------------------------------------------------------------------------
+-- Creating string from stats: this is aimed to be used to share
+-- builds with people
+-- ----------------------------------------------------------------------------
+
+function StatShareWindow:Refresh()
+    self.groups["MoralePower"]:SetText(
+        string.format("Morale..: %s", stats["Morale"]:AsString()) .. "\n" ..
+        string.format("Power...: %s", stats["Power"]:AsString())
+    )
+
+    self.groups["Regen"]:SetText(
+        string.format("ICMR...: %s (%s / s)",
+            FormatNumber(stats["ICMR"]:Rating() * 60),
+            stats["ICMR"]:AsString()
+        )  .. "\n" ..
+        string.format("ICPR....: %s (%s / s)",
+            FormatNumber(stats["ICPR"]:Rating() * 60),
+            stats["ICPR"]:AsString()
+        )
+    )
+
+    self.groups["BasicStats"]:SetText(
+        string.format("Might.....: %s", stats["Might"]:RatingAsString())  .. "\n" ..
+        string.format("Agility....: %s", stats["Agility"]:RatingAsString())  .. "\n" ..
+        string.format("Vitality...: %s", stats["Vitality"]:RatingAsString())  .. "\n" ..
+        string.format("Will........: %s", stats["Will"]:RatingAsString())  .. "\n" ..
+        string.format("Fate......: %s", stats["Fate"]:RatingAsString())
+    )
+
+    self.groups["Offence"]:SetText(
+        string.format("Critical Rating....: %s - %s",
+            stats["CritRate"]:RatingAsString(),
+            stats["CritRate"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Finesse.............: %s - %s",
+            stats["Finesse"]:RatingAsString(),
+            stats["Finesse"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Physical Mastery: %s - %s",
+            stats["PhysMast"]:RatingAsString(),
+            stats["PhysMast"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Tactical Mastery: %s - %s",
+            stats["TactMast"]:RatingAsString(),
+            stats["TactMast"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Outgoing Healing: %s",
+            stats["HealOut"]:RatingAsString()
+        )
+    )
+
+    self.groups["Defence"]:SetText(
+        string.format("Resistance........: %s - %s",
+            stats["Resistance"]:RatingAsString(),
+            stats["Resistance"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Critical Defence.: %s - %s",
+            stats["CritDef"]:RatingAsString(),
+            stats["CritDef"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Incoming Healing: %s - %s",
+            stats["HealIn"]:RatingAsString(),
+            stats["HealIn"]:PercentAsString()
+        )
+    )
+
+    self.groups["Avoidance"]:SetText(
+        string.format("Block.: %s - %s",
+            stats["Block"]:RatingAsString(),
+            stats["Block"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Parry.: %s - %s",
+            stats["Parry"]:RatingAsString(),
+            stats["Parry"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Evade: %s - %s",
+            stats["Evade"]:RatingAsString(),
+            stats["Evade"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("BPE...: %s", stats["Avoidances"]:RatingAsString())
+    )
+
+    self.groups["Mitigations"]:SetText(
+        string.format("Phys. Mitigation..: %s - %s",
+            stats["CommonMit"]:RatingAsString(),
+            stats["CommonMit"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("Tact. Mitigation..: %s - %s",
+            stats["TactMit"]:RatingAsString(),
+            stats["TactMit"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("OC/FW Mitigation: %s - %s",
+            stats["PhysMit"]:RatingAsString(),
+            stats["PhysMit"]:PercentAsString()
+        )
+    )
+end
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
 -- UI: Stat group & node classes
 --
 -- ****************************************************************************
@@ -334,9 +616,9 @@ end
 
 function StatNode:Refresh()
 	xDEBUG("Updating: " .. self.key)
-	
+
 	local stat = stats[self.key]
-	
+
 	if stat ~= nil then
 		self.labelValue:SetText( stat:AsString() );
 		local diff = stat:DiffAsString();
@@ -383,6 +665,7 @@ function StatGroup:Constructor( name, nodes )
 	self.labelKey:SetSize( 250, 16 );
 	self.labelKey:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
 	self.labelKey:SetText( name );
+	self.labelKey:SetMouseVisible( false );
 
 	local childList = self:GetChildNodes();
 
@@ -402,215 +685,6 @@ function StatGroup:Refresh()
 		child:Refresh()
 	end
 end	
-
--- ****************************************************************************
--- ****************************************************************************
---
--- Share window: This is bit hairy. We need to create a shortcut, which
--- contains alias, which contains command to send a line to correct
--- channel.
---
--- ****************************************************************************
--- ****************************************************************************
-
-StatShareWindow = class(Turbine.UI.Lotro.Window)
-
-function StatShareWindow:Constructor()
-	Turbine.UI.Lotro.Window.Constructor(self);
-
-	self:SetText("Share stats");
-	self:SetResizable(true);
-
-    -- ------------------------------------------------------------------------
-
-    self.textbox = utils.ScrolledTextBox()
-    self.textbox:SetParent(self)
-	self.textbox:SetFont(Turbine.UI.Lotro.Font.Verdana14);
-    self.textbox:SetReadOnly(false)
-    self.textbox:SetSelectable(true)
-
-	self.channelbtn = utils.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
-	self.channelbtn:SetParent( self );
-
-    self.namebox = utils.ScrolledTextBox() -- Turbine.UI.TextBox()
-    self.namebox:SetParent(self)
-    self.namebox:SetMultiline(false)
-	self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
-    self.namebox:SetText("")
-
-	self.sendbtn = Turbine.UI.Lotro.Quickslot();
-	self.sendbtn:SetParent( self );
-	self.sendbtn:SetAllowDrop(false);
-
-    self.createbtn = Turbine.UI.Lotro.Button()
-	self.createbtn:SetParent( self );
-    self.createbtn:SetText("Create")
-    self.createbtn.MouseClick = function(sender, args)
-        local channel = self.channelbtn:GetText()
-        local target = (channel == "/tell") and self.namebox:GetText() or ""
-        local text = self.textbox:GetText()
-
-        self.sendbtn:SetShortcut(Turbine.UI.Lotro.Shortcut(
-            Turbine.UI.Lotro.ShortcutType.Alias,
-            string.format("%s %s Stats:\n%s", channel, target, text)
-        ))
-    end
-
-
-    -- ------------------------------------------------------------------------
-
-	if Settings["ShareWindowPosition"] == nil then
-	    Settings["ShareWindowPosition"] = DefaultSettings["ShareWindowPosition"]
-	end
-
-	self:SetPosition(
-		Settings.ShareWindowPosition.Left,
-		Settings.ShareWindowPosition.Top
-	)
-	self:SetSize(
-		310, -- Settings.WindowPosition.Width,
-		Settings.ShareWindowPosition.Height
-	)
-
-    self:SetVisible(false)
-end
-
--- ----------------------------------------------------------------------------
--- Layouting
--- ----------------------------------------------------------------------------
-
-function StatShareWindow:SizeChanged( args )
-
-	self.textbox:SetPosition( 20, 40 );
-	self.textbox:SetSize(
-	    self:GetWidth() - 2*20,
-	    self:GetHeight() - (40 + 60)
-    );
-
-    -- ------------------------------------------------------------------------
-
-    local btntop = self:GetHeight() - (40 + 60) + 40 + 5
-
-	self.channelbtn:SetWidth(60);
-	self.channelbtn:SetPosition(20, btntop + 10)
-
-	self.namebox:SetSize(
-	    self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 40) - 20,
-	    18
-	);
-	self.namebox:SetPosition(20 + 65, btntop + 10)
-
-    -- ------------------------------------------------------------------------
-
-	self.createbtn:SetSize( 60, 18 );
-	self.createbtn:SetPosition(
-		self:GetWidth() - 60 - 40 - 25,
-		btntop + 10
-	);
-
-	self.sendbtn:SetSize( 40, 40 );
-	self.sendbtn:SetPosition(
-	    self:GetWidth()  - 40 - 20,
-		btntop
-	);
-end
-
--- ----------------------------------------------------------------------------
--- Creating string from stats: this is aimed to be used to share
--- builds with people
--- ----------------------------------------------------------------------------
-
-function StatShareWindow:Refresh()
-    local summary =
-        "- - - - - - - - - - - - - - - - - - -\n" ..
-        string.format("Morale..: %s\n", stats["Morale"]:AsString()) ..
-        string.format("Power...: %s\n", stats["Power"]:AsString()) ..
-
-        "- - - - - - - - - - - - - - - - - - -\n" ..
-        string.format("ICMR...: %s (%s / s)\n",
-            FormatNumber(stats["ICMR"]:Rating() * 60),
-            stats["ICMR"]:AsString()
-        ) ..
-        string.format("ICPR....: %s (%s / s)\n",
-            FormatNumber(stats["ICPR"]:Rating() * 60),
-            stats["ICPR"]:AsString()
-        ) ..
-
-        "- - - - - - - - - - - - - - - - - - -\n" ..
-        string.format("Might.....: %s\n", stats["Might"]:RatingAsString()) ..
-        string.format("Agility....: %s\n", stats["Agility"]:RatingAsString()) ..
-        string.format("Vitality...: %s\n", stats["Vitality"]:RatingAsString()) ..
-        string.format("Will........: %s\n", stats["Will"]:RatingAsString()) ..
-        string.format("Fate......: %s\n", stats["Fate"]:RatingAsString()) ..
-
-        "- - - - - - - - - - - - - - - - - - -\n" ..
-        string.format("Critical Rating.....: %s - %s\n",
-            stats["CritRate"]:RatingAsString(),
-            stats["CritRate"]:PercentAsString()
-        ) ..
-        string.format("Finesse.............: %s - %s\n",
-            stats["Finesse"]:RatingAsString(),
-            stats["Finesse"]:PercentAsString()
-        ) ..
-        string.format("Physical Mastery: %s - %s\n",
-            stats["PhysMast"]:RatingAsString(),
-            stats["PhysMast"]:PercentAsString()
-        ) ..
-        string.format("Tactical Mastery: %s - %s\n",
-            stats["TactMast"]:RatingAsString(),
-            stats["TactMast"]:PercentAsString()
-        ) ..
-        string.format("Outgoing Healing: %s\n",
-            stats["HealOut"]:RatingAsString()
-        ) ..
-
-        "- - - - - - - - - - - - - - - - - - -\n" ..
-        string.format("Resistance.........: %s - %s\n",
-            stats["Resistance"]:RatingAsString(),
-            stats["Resistance"]:PercentAsString()
-        ) ..
-        string.format("Critical Defence..: %s - %s\n",
-            stats["CritDef"]:RatingAsString(),
-            stats["CritDef"]:PercentAsString()
-        ) ..
-        string.format("Incoming Healing: %s - %s\n",
-            stats["HealIn"]:RatingAsString(),
-            stats["HealIn"]:PercentAsString()
-        ) ..
-
-        "- - - - - - - - - - - - - - - - - - -\n" ..
-        string.format("Block..: %s - %s\n",
-            stats["Block"]:RatingAsString(),
-            stats["Block"]:PercentAsString()
-        ) ..
-        string.format("Parry..: %s - %s\n",
-            stats["Parry"]:RatingAsString(),
-            stats["Parry"]:PercentAsString()
-        ) ..
-        string.format("Evade.: %s - %s\n",
-            stats["Evade"]:RatingAsString(),
-            stats["Evade"]:PercentAsString()
-        ) ..
-        string.format("BPE...: %s\n", stats["Avoidances"]:RatingAsString()) ..
-
-        "- - - - - - - - - - - - - - - - - - -\n" ..
-        string.format("Phys. Mitigation: %s - %s\n",
-            stats["CommonMit"]:RatingAsString(),
-            stats["CommonMit"]:PercentAsString()
-        ) ..
-        string.format("Tact. Mitigation: %s - %s\n",
-            stats["TactMit"]:RatingAsString(),
-            stats["TactMit"]:PercentAsString()
-        ) ..
-        string.format("OC/FW Mitigation: %s - %s\n",
-            stats["PhysMit"]:RatingAsString(),
-            stats["PhysMit"]:PercentAsString()
-        ) ..
-
-        "- - - - - - - - - - - - - - - - - - -\n";
-    -- println("%s", summary)
-    self.textbox:SetText(summary)
-end
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -953,7 +1027,7 @@ _plugin:atexit(function() mainwnd:Unload() end)
 -- ****************************************************************************
 -- ****************************************************************************
 
-myCMD = Turbine.ShellCommand();
+local myCMD = Turbine.ShellCommand();
 
 function myCMD:Execute(cmd, args)
 	if ( args == "show" ) then
@@ -964,15 +1038,18 @@ function myCMD:Execute(cmd, args)
 	elseif ( args == "toggle" ) then
 		mainwnd:SetVisible( not mainwnd:IsVisible() );
 		mainwnd:Refresh()
+	elseif ( args == "share" ) then
+		mainwnd.sharebtn:MouseClick()
 	else
-		INFO("/stats [show | hide | toggle]")
+		INFO("/stats [show | hide | toggle | share]")
 	end
 end
 
 Turbine.Shell.AddCommand( "stats", myCMD );
+myCMD:Execute()
 _plugin:atexit(function() Turbine.Shell.RemoveCommand(myCMD) end)
 
-INFO("/stats [show | hide | toggle]" )
+-- INFO("/stats [show | hide | toggle | share]" )
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -1007,7 +1084,7 @@ function InstallHooks()
 		end
 	end
 end
-	
+
 function UninstallHooks()
 	for i = 1, table.getn(_hooks) do
 		if _hooks[i].object ~= nil then

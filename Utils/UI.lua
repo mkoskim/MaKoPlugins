@@ -133,8 +133,9 @@ function ScrolledTreeView:Expand(expanded)
 		local node = nodes:Get( i );
 		if node["name"] ~= nil and expanded[node.name] then
 	        -- xDEBUG(node.name .. " expanded: " .. tostring(expanded))
-	        node:Expand()
-	        node:MouseClick()
+	        --node:Expand()
+	        node:SetExpanded(true)
+	        --node:MouseClick()
 		end
 	end
 end
@@ -164,18 +165,20 @@ function TreeGroup:Constructor()
 	self.iconExpand:SetSize( 16, 16 );
 	self.iconExpand:SetBackground( IconExpand );
 	self.iconExpand:SetBlendMode( Turbine.UI.BlendMode.AlphaBlend );
-	-- self.iconExpand:SetMouseVisible( false );
+	self.iconExpand:SetMouseVisible( false );
 
 	self:SetBackground( HeaderBackground );
+end
 
-	self.MouseClick = function( sender, args )
-		local expanded = self:IsExpanded();
-		if expanded then
-			self.iconExpand:SetBackground( IconCollapse );
-		else
-			self.iconExpand:SetBackground( IconExpand );
-		end
-	end
+function TreeGroup:MouseClick(args)
+	self.iconExpand:SetBackground(
+	    self:IsExpanded() and IconCollapse or IconExpand
+    );
+end
+
+function TreeGroup:SetExpanded(status)
+    Turbine.UI.TreeNode.SetExpanded(self, status)
+    self:MouseClick()
 end
 
 -- ----------------------------------------------------------------------------
@@ -197,9 +200,6 @@ function TreeSeparator:Constructor()
 	self:SetSize( 240, 1 );
 	self:SetBackColorBlendMode( Turbine.UI.BlendMode.AlphaBlend );
 
-	-- self.frame = Turbine.UI.Control();
-	-- self.frame:SetParent( self );
-	-- self.frame:SetSize( self:GetSize() );
 	self:SetBackColor( focusColor );
 end
 
