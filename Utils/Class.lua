@@ -4,6 +4,7 @@
 -- Modified to use a metatable to reference base objects instead
 -- or performing shallow copies. This means smaller classes that
 -- are a bit more dynamic at the expence of some performance.
+
 _G.class = function( base )
         if ( base ~= nil ) then
                 local baseType = type( base );

@@ -10,107 +10,97 @@ import "MaKoPlugins.Utils.Class";
 
 -- ****************************************************************************
 
-function println(fmt, ...)
+function _G.println(fmt, ...)
 	Turbine.Shell.WriteLine(string.format(fmt, unpack(arg)))
 end
 
 -- ****************************************************************************
--- Store Plug-in name: when unloading, global plugin is destroyed when Unload
--- is called.
--- ****************************************************************************
 
-PlugIn = class()
-
-function PlugIn:Constructor()
-	self._atexit = {}
-	self.name = plugin:GetName()
-	plugin.Unload = function()
-		self:INFO("Unloading...")
-		self:atexit_execute()
-	end
+function _G.INFO(fmt, ...)
+	println( plugin:GetName() .. ": " .. fmt, unpack(arg))
 end
 
--- ****************************************************************************
-
-function PlugIn:INFO(fmt, ...)
-	println( self.name .. ": " .. fmt, unpack(arg))
-	end
-
-function PlugIn:DEBUG(fmt, ...)
+function _G.DEBUG(fmt, ...)
 	if debugging then
-		self:INFO("DEBUG: " .. fmt, unpack(arg))
-		end
+		INFO("DEBUG: " .. fmt, unpack(arg))
 	end
-
-function PlugIn:xDEBUG(fmt, ...)
-	end
-
--- ****************************************************************************
-
-function PlugIn:atexit(callback)
-	table.insert(self._atexit, callback)
 end
 
-function PlugIn:atexit_execute()
-	local size = table.getn(self._atexit);
-    for i = 1, size do
-		self._atexit[i]()
-	end
-	self._atexit = { }
+function _G.xDEBUG(fmt, ...)
 end
 
 -- ****************************************************************************
+
+function plugin.LoadSettings(filename, defaults)
+    return Turbine.PluginData.Load(
+	    Turbine.DataScope.Character,
+	    filename
+    ) or defaults;
+end
+
+function plugin.SaveSettings(filename, settings)
+    Turbine.PluginData.Save(
+		Turbine.DataScope.Character,
+		filename,
+		settings
+	)
+end
+
 -- ****************************************************************************
 
-function showfields(tbl)
+plugin._atexittbl = { }
+
+function _G.atexit(callback)
+	table.insert(plugin._atexittbl, callback)
+end
+
+plugin.Unload = function(self)
+    _G.plugin = self
+    for _, callback in pairs(self._atexittbl) do
+		callback()
+	end
+	_G.plugin = nil
+	self._atexittbl = { }
+end
+
+-- ****************************************************************************
+-- ****************************************************************************
+
+function _G.dumptable(tbl)
 	for k, v in pairs(tbl) do
-		println( "Name: %s, value: %s", tostring(k), tostring(v) )
+		println("%s (%s)", k, tostring(v))
 		end
 	end
 
 -- ****************************************************************************
 -- ****************************************************************************
 --
---
+-- Hooking objects
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
--- ----------------------------------------------------------------------------
--- Use Galuhad's implementation instead (AddCallBack.lua)
--- ----------------------------------------------------------------------------
+_G.HookTable = class()
 
---[[
-function AddCallback(object, event, callback)
-	xDEBUG("AddCallback: " .. event)
-    if (object[event] == nil) then
-        object[event] = callback;
-    else
-        if (type(object[event]) == "table") then
-            table.insert(object[event], callback);
-        else
-            object[event] = {object[event], callback};
-        end
-    end
-    return callback;
+function HookTable:Constructor( hooks )
+    self.hooks = hooks
 end
-]]
 
--- ----------------------------------------------------------------------------
+function HookTable:Install()
+	xDEBUG("Installing hooks...")
+	for _, entry in pairs(self.hooks) do
+		if entry.object ~= nil then
+			AddCallback(entry.object, entry.event, entry.callback)
+		end
+	end
+end
 
-function RemoveCallback(object, event, callback)
-    if (object[event] == callback) then
-        object[event] = nil;
-    else
-        if (type(object[event]) == "table") then
-            local size = table.getn(object[event]);
-            for i = 1, size do
-                if (object[event][i] == callback) then
-                    table.remove(object[event], i);
-                    break;
-                end
-            end
-        end
-    end
+function HookTable:Uninstall()
+	xDEBUG("Removing hooks...")
+	for _, entry in pairs(self.hooks) do
+		if entry.object ~= nil then
+			AddCallback(entry.object, entry.event, entry.callback)
+		end
+	end
 end
 

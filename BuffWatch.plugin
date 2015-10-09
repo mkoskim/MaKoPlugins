@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <Plugin>
     <Information>
-        <Name>MaKo (expr): BuffWatch</Name>
+        <Name>X - MaKo: BuffWatch</Name>
         <Author>MaKo</Author>
-        <Version>0.1</Version>
+        <Version>Experimental</Version>
         <Description>Choose buffs and debuffs to be tracked in real time</Description>
     </Information>
     <Package>MaKoPlugins.BuffWatch.Main</Package>

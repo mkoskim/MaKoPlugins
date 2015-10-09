@@ -26,3 +26,7 @@ SHARING: Open sharing window by pressing 'Share' button. Stats are converted to 
 
 Pressing 'Create' button will create you a shortcut, and pressing it will send the stats to chosen channel.
 
+A command line argument is available to toggle share window for quickslotting:
+
+    /stats share
+

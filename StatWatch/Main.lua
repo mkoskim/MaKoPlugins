@@ -14,14 +14,6 @@ import "MaKoPlugins.Utils";
 import "MaKoPlugins.StatWatch.Conversion";
 
 local utils   = MaKoPlugins.Utils
-local _plugin = utils.PlugIn()
-
-local println = utils.println
-local INFO    = function(fmt, ...) _plugin:INFO(fmt, unpack(arg)) end
-local DEBUG   = function(fmt, ...) _plugin:DEBUG(fmt, unpack(arg)) end
-local xDEBUG  = function(fmt, ...) _plugin:xDEBUG(fmt, unpack(arg)) end
-
--- ****************************************************************************
 
 -- ----------------------------------------------------------------------------
 -- Obtain & extending player info, ready for using
@@ -60,15 +52,15 @@ local DefaultSettings = {
 	}
 }
 
-local Settings = Turbine.PluginData.Load(
-		Turbine.DataScope.Character,
-		"StatWatchSettings"
-	) or DefaultSettings;
+local Settings = plugin.LoadSettings(
+    "StatWatchSettings",
+    DefaultSettings
+)
 
 -- ****************************************************************************
 -- ****************************************************************************
 
-function FormatNumber(number, decimals)
+local function FormatNumber(number, decimals)
 
 	if number < 1000 then
 		return string.format("%." .. tostring(decimals or 0) .. "f", number)
@@ -251,6 +243,7 @@ Stat("Avoidances", function()
 	FormatPercentage
 )
 
+--[[
 Stat("SelfHeal", function()
 	return 100 *
 		(1.0 + stats["HealIn"]:Percentage()/100.0) *
@@ -279,6 +272,7 @@ Stat("TactELM", function()
 	nil,
 	FormatELM
 )
+]]--
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -979,16 +973,18 @@ function StatBrowser:Unload()
 	-- Store window position & size
 	-- ------------------------------------------------------------------------
 
-	Settings.WindowPosition.Left = self:GetLeft();
-	Settings.WindowPosition.Top = self:GetTop();
-	Settings.WindowPosition.Height = self:GetHeight();
-	Settings.WindowPosition.Width = self:GetWidth();
+	Settings.WindowPosition = {
+	    Left = self:GetLeft(),
+	    Top = self:GetTop(),
+	    Height = self:GetHeight(),
+	    Width = self:GetWidth()
+	};
 
-	Settings["ShareWindowPosition"] = {
-	    ["Left"] = self.sharewindow:GetLeft(),
-	    ["Top"] = self.sharewindow:GetTop(),
-	    ["Height"] = self.sharewindow:GetHeight(),
-	    ["Width"] = self.sharewindow:GetWidth()
+	Settings.ShareWindowPosition = {
+	    Left = self.sharewindow:GetLeft(),
+	    Top = self.sharewindow:GetTop(),
+	    Height = self.sharewindow:GetHeight(),
+	    Width = self.sharewindow:GetWidth()
 	}
 
 	Settings.ShowPercentages = percentages;
@@ -1003,8 +999,7 @@ function StatBrowser:Unload()
 	-- Save settings
 	-- ------------------------------------------------------------------------
 
-	Turbine.PluginData.Save(
-		Turbine.DataScope.Character,
+	plugin.SaveSettings(
 		"StatWatchSettings",
 		Settings
 	)
@@ -1017,7 +1012,7 @@ end
 
 local mainwnd = StatBrowser()
 
-_plugin:atexit(function() mainwnd:Unload() end)
+atexit(function(plugin) mainwnd:Unload() end)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -1027,9 +1022,9 @@ _plugin:atexit(function() mainwnd:Unload() end)
 -- ****************************************************************************
 -- ****************************************************************************
 
-local myCMD = Turbine.ShellCommand();
+local _cmd = Turbine.ShellCommand();
 
-function myCMD:Execute(cmd, args)
+function _cmd:Execute(cmd, args)
 	if ( args == "show" ) then
 		mainwnd:SetVisible( true );
 		mainwnd:Refresh()
@@ -1045,11 +1040,9 @@ function myCMD:Execute(cmd, args)
 	end
 end
 
-Turbine.Shell.AddCommand( "stats", myCMD );
-myCMD:Execute()
-_plugin:atexit(function() Turbine.Shell.RemoveCommand(myCMD) end)
-
--- INFO("/stats [show | hide | toggle | share]" )
+Turbine.Shell.AddCommand( "stats", _cmd );
+_cmd:Execute()
+atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -1060,11 +1053,13 @@ _plugin:atexit(function() Turbine.Shell.RemoveCommand(myCMD) end)
 -- ****************************************************************************
 -- ****************************************************************************
 
+DEBUG("Setting hooks...")
+
 function RefreshHandler(sender, args)
 	mainwnd:Refresh()
 	end
 
-local _hooks = {
+local hooks = HookTable({
 	{ object = effects, event = "EffectAdded", callback = RefreshHandler },
 	{ object = effects, event = "EffectRemoved", callback = RefreshHandler },
 	{ object = effects, event = "EffectCleared", callback = RefreshHandler },
@@ -1075,24 +1070,10 @@ local _hooks = {
 	{ object = player, event = "MaxMoraleChanged", callback = RefreshHandler },
 	{ object = player, event = "MaxPowerChanged", callback = RefreshHandler },
 	{ object = player, event = "LevelChanged", callback = RefreshHandler },
-}
+})
 
-function InstallHooks()
-	for i = 1, table.getn(_hooks) do
-		if _hooks[i].object ~= nil then
-			utils.AddCallback(_hooks[i].object, _hooks[i].event, _hooks[i].callback)
-		end
-	end
-end
+hooks:Install()
+atexit(function() hooks:Uninstall() end)
 
-function UninstallHooks()
-	for i = 1, table.getn(_hooks) do
-		if _hooks[i].object ~= nil then
-			utils.RemoveCallback(_hooks[i].object, _hooks[i].event, _hooks[i].callback)
-		end
-	end
-end
-
-InstallHooks()
-_plugin:atexit(UninstallHooks)
+DEBUG("Done.")
 

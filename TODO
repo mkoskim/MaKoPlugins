@@ -1,0 +1,10 @@
+TODO:
+
+- Write user instructions
+
+- ZIP is 'MaKoPlugins-master', not 'MaKoPlugins'
+
+- Investigate: When creating plugin options panel, SizeChanged()
+  gets correct width (GetWidth), but height (GetHeight) is not changed at
+  all.
+

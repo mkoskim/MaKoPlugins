@@ -1,6 +1,0 @@
-TODO:
-
-- Write user instructions
-
-- ZIP is 'MaKoPlugins-master', not 'MaKoPlugins'
-

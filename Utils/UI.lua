@@ -87,7 +87,7 @@ end
 ScrolledTreeView = class(Turbine.UI.TreeView)
 
 function ScrolledTreeView:Constructor()
-	Turbine.UI.TreeView.Constructor(self);
+	Turbine.UI.TreeView.Constructor(self)
 
 	self:SetIndentationWidth( 20 );
 	self:SetBackColor( bgColor );
@@ -245,4 +245,15 @@ function ScrolledTextBox:SetSize(w, h)
 	self.scrollbar:SetPosition(self:GetLeft() + self:GetWidth() - 10, self:GetTop())
 	self.scrollbar:SetSize(10, self:GetHeight())
 end
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Attempt to make quickslot with working Drag'n'Drop... Quickslot is a
+-- component that holds Shortcut object.
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+Quickslot = class(Turbine.UI.Lotro.Quickslot)
 
