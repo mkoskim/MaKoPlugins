@@ -112,7 +112,7 @@ function Stat:Constructor(key, rawvalue, percentage, fmt)
 	else
 		self.fmt = function(number) return FormatNumber(number) end
 	end
-	
+
 	stats[key] = self
 end
 
@@ -374,6 +374,9 @@ function StatShareWindow:Constructor()
 	self.sendbtn = Turbine.UI.Lotro.Quickslot();
 	self.sendbtn:SetParent( self );
 	self.sendbtn:SetAllowDrop(false);
+    self.sendbtn.MouseClick = function(sender, args)
+        -- self.sendbtn:SetShortcut(nil)
+    end
 
     self.createbtn = Turbine.UI.Lotro.Button()
 	self.createbtn:SetParent( self );
@@ -1053,7 +1056,7 @@ atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 -- ****************************************************************************
 -- ****************************************************************************
 
-DEBUG("Setting hooks...")
+xDEBUG("Setting hooks...")
 
 function RefreshHandler(sender, args)
 	mainwnd:Refresh()
@@ -1075,5 +1078,5 @@ local hooks = HookTable({
 hooks:Install()
 atexit(function() hooks:Uninstall() end)
 
-DEBUG("Done.")
+xDEBUG("Done.")
 
