@@ -17,9 +17,6 @@ import "MaKoPlugins.Utils.Class";
 import "MaKoPlugins.Utils.AddCallBack"
 import "MaKoPlugins.Utils.Misc";
 
-import "MaKoPlugins.Utils.UI";
+import "MaKoPlugins.Utils.UI"
+-- import "MaKoPlugins.Utils.UI.DropDown"
 
--- ----------------------------------------------------------------------------
--- Galuhad DropDown menu
-
-import "MaKoPlugins.Utils.DropDown"

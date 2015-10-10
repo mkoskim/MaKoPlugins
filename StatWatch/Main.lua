@@ -281,10 +281,10 @@ Stat("TactELM", function()
 -- ****************************************************************************
 -- ****************************************************************************
 
-StatShareGroup = class(Utils.TreeGroup)
+StatShareGroup = class(Utils.UI.TreeGroup)
 
 function StatShareGroup:Constructor(name)
-    Utils.TreeGroup.Constructor(self);
+    Utils.UI.TreeGroup.Constructor(self);
 
 	self:SetSize( 270, 16 );
 
@@ -295,7 +295,7 @@ function StatShareGroup:Constructor(name)
 	self.labelKey:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
 	self.labelKey:SetText( name );
 
-    self.node = Utils.TreeNode()
+    self.node = Utils.UI.TreeNode()
 
     self.textbox = Turbine.UI.TextBox()
     self.textbox:SetParent(self.node)
@@ -321,17 +321,17 @@ end
 
 -- ----------------------------------------------------------------------------
 
-StatShareWindow = class(Turbine.UI.Lotro.Window)
+StatShareWindow = class(Utils.UI.Window)
 
 function StatShareWindow:Constructor()
-	Turbine.UI.Lotro.Window.Constructor(self);
+	Utils.UI.Window.Constructor(self);
 
 	self:SetText("Share stats");
 	self:SetResizable(true);
 
     -- ------------------------------------------------------------------------
 
-    self.chooser = Utils.ScrolledTreeView()
+    self.chooser = Utils.UI.ScrolledTreeView()
     self.chooser:SetParent(self)
 
     self.groups = {
@@ -359,10 +359,10 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-	self.channelbtn = Utils.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
+	self.channelbtn = Utils.UI.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
 	self.channelbtn:SetParent( self );
 
-    self.namebox = Utils.ScrolledTextBox() -- Turbine.UI.TextBox()
+    self.namebox = Utils.UI.ScrolledTextBox() -- Turbine.UI.TextBox()
     self.namebox:SetParent(self)
     self.namebox:SetMultiline(false)
 	self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
@@ -568,11 +568,11 @@ end
 -- Stat Node (stat line in listbox)
 -- ----------------------------------------------------------------------------
 
-local StatNode = class( Utils.TreeNode )
+local StatNode = class( Utils.UI.TreeNode )
 
 function StatNode:Constructor( text, key )
 
-	Utils.TreeNode.Constructor( self );
+	Utils.UI.TreeNode.Constructor( self );
 
 	self.text = text
 	if key ~= nil then
@@ -635,7 +635,7 @@ end
 -- Stat Node Separator
 -- ----------------------------------------------------------------------------
 
-local StatSep = class( Utils.TreeSeparator )
+local StatSep = class( Utils.UI.TreeSeparator )
 
 function StatSep:Refresh() end
 
@@ -643,11 +643,11 @@ function StatSep:Refresh() end
 -- Stat Group
 -- ----------------------------------------------------------------------------
 
-local StatGroup = class( Utils.TreeGroup )
+local StatGroup = class( Utils.UI.TreeGroup )
 
 function StatGroup:Constructor( name, nodes )
 
-    Utils.TreeGroup.Constructor(self);
+    Utils.UI.TreeGroup.Constructor(self);
 
 	self.name = name;
 
@@ -688,10 +688,10 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 
-StatBrowser = class(Turbine.UI.Lotro.Window);
+StatBrowser = class(Utils.UI.Window);
 
 function StatBrowser:Constructor()
-	Turbine.UI.Lotro.Window.Constructor(self);
+	Utils.UI.Window.Constructor(self);
 
 	-- ------------------------------------------------------------------------
 	-- Window properties
@@ -709,7 +709,7 @@ function StatBrowser:Constructor()
 	-- ListBox for stats
 	-- ------------------------------------------------------------------------
 
-    self.statlist = Utils.ScrolledTreeView()
+    self.statlist = Utils.UI.ScrolledTreeView()
     self.statlist:SetParent(self)
 
 	-- ------------------------------------------------------------------------
@@ -741,7 +741,7 @@ function StatBrowser:Constructor()
 		end
 	end
 
-	self.formatbtn = Utils.DropDown({"#", "%"});
+	self.formatbtn = Utils.UI.DropDown({"#", "%"});
 	self.formatbtn:SetParent( self );
 	self.formatbtn:SetText(percentages and "%" or "#");
 	self.formatbtn.ItemChanged = function(sender, args) 
@@ -749,7 +749,7 @@ function StatBrowser:Constructor()
 		self:Refresh();
 	end
 
-	self.referencebtn = Utils.DropDown({"", "Set", "Cap"});
+	self.referencebtn = Utils.UI.DropDown({"", "Set", "Cap"});
 	self.referencebtn:SetParent( self );
 	self.referencebtn:SetText( "" );
 	self.referencebtn.ItemChanged = function(sender, args)

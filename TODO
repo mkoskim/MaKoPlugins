@@ -8,3 +8,5 @@ TODO:
   gets correct width (GetWidth), but height (GetHeight) is not changed at
   all.
 
+- Custom Window class: one that recognizes both ESC and F12
+

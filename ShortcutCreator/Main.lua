@@ -6,13 +6,7 @@
 -- ****************************************************************************
 -- ****************************************************************************
 
-debugging = true
-
--- ****************************************************************************
-
-import "MaKoPlugins.Utils";
-
-local utils = MaKoPlugins.Utils
+import "MaKoPlugins.ShortcutCreator.Bindings";
 
 -- ----------------------------------------------------------------------------
 -- Create window
@@ -30,7 +24,7 @@ function ShortcutPanel:Constructor()
 
     -- ------------------------------------------------------------------------
 
-    self.textbox = utils.ScrolledTextBox()
+    self.textbox = Utils.ScrolledTextBox()
     self.textbox:SetParent(self)
     self.textbox:SetMultiline(true)
     self.textbox:SetSelectable(true)
@@ -38,7 +32,7 @@ function ShortcutPanel:Constructor()
 
     -- ------------------------------------------------------------------------
 
-	self.quickslot = utils.Quickslot();
+	self.quickslot = Utils.Quickslot();
 	self.quickslot:SetParent( self );
 	self.quickslot:SetAllowDrop(true);
 
@@ -110,9 +104,8 @@ end
 
 local optionsPanel = ShortcutPanel()
 
-function plugin:GetOptionsPanel()
-    if not _G.plugin then _G.plugin = self end
-    DEBUG("GetOptionsPanel")
+plugin.GetOptionsPanel = function(self)
+    xDEBUG("GetOptionsPanel")
     return optionsPanel;
 end
 
