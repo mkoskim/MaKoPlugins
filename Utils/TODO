@@ -1,10 +1,14 @@
+-------------------------------------------------------------------------------
+
 DONE:
+
+- DONE: This was bad idea. Misc.lua: Currently, we "inject" fields and
+  functions to global plugin object: need to ensure if this is safe.
+  
+-------------------------------------------------------------------------------
 
 TODO:
 
-- Misc.lua: Currently, we "inject" fields and functions to global plugin object:
-  need to ensure if this is safe.
-  
 - Misc.lua: When unloading the plugin, we temporarily inject global plugin
   variable again. Need to ensure if this is safe.
 

@@ -1,12 +1,19 @@
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Plugin main template
+-- Target manager: Plan is to get a plugin to help managing targets when
+-- e.g. playing Loremaster.
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-import "MaKoPlugins.Template.Bindings"
+-- ****************************************************************************
+--
+-- Import utils and bring some functions to local namespace
+--
+-- ****************************************************************************
+
+import "MaKoPlugins.TargetManager.Bindings";
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -28,7 +35,7 @@ local DefaultSettings = {
 	WindowVisible = true,
 }
 
-local Settings = PlugIn:LoadSettings("TemplateSettings", DefaultSettings)
+local Settings = PlugIn:LoadSettings("TgtMgrSettings", DefaultSettings)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -47,7 +54,7 @@ function MainWindow:Constructor()
 	-- Window properties
 	-- ------------------------------------------------------------------------
 
-	self:SetText("Template");
+	self:SetText("Target Manager");
 
 	self:SetResizable(true);
 
@@ -60,7 +67,7 @@ function MainWindow:Constructor()
 		Settings.WindowPosition.Top
 	)
 	self:SetSize(
-		310, -- Settings.WindowPosition.Width,
+		Settings.WindowPosition.Width,
 		Settings.WindowPosition.Height
 	)
 
@@ -106,7 +113,7 @@ function MainWindow:Unload()
 	-- Save settings
 	-- ------------------------------------------------------------------------
 
-	PlugIn:SaveSettings("TemplateSettings", Settings)
+	PlugIn:SaveSettings("TgtMgrSettings", Settings)
 
 end
 
@@ -140,6 +147,6 @@ function _cmd:Execute(cmd, args)
 	end
 end
 
-Turbine.Shell.AddCommand( "template", _cmd );
+Turbine.Shell.AddCommand( "tgtmgr", _cmd );
 atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 

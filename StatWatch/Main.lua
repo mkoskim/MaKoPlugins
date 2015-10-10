@@ -12,21 +12,7 @@
 --
 -- ****************************************************************************
 
-import "MaKoPlugins.Utils";
-
-local utils = MaKoPlugins.Utils
-
-local PlugIn = utils.PlugIn(plugin)
-local HookTable = utils.HookTable
-
-local println = utils.println
-local INFO = function(fmt, ...) PlugIn:INFO(fmt, unpack(arg)) end
-local DEBUG = function(fmt, ...) PlugIn:DEBUG(fmt, unpack(arg)) end
-local xDEBUG = function(fmt, ...) end
-local atexit = function(callback) PlugIn:atexit(callback) end
-
--- ----------------------------------------------------------------------------
-
+import "MaKoPlugins.StatWatch.Bindings";
 import "MaKoPlugins.StatWatch.Conversion";
 
 -- ----------------------------------------------------------------------------
@@ -295,10 +281,10 @@ Stat("TactELM", function()
 -- ****************************************************************************
 -- ****************************************************************************
 
-StatShareGroup = class(utils.TreeGroup)
+StatShareGroup = class(Utils.TreeGroup)
 
 function StatShareGroup:Constructor(name)
-    utils.TreeGroup.Constructor(self);
+    Utils.TreeGroup.Constructor(self);
 
 	self:SetSize( 270, 16 );
 
@@ -309,7 +295,7 @@ function StatShareGroup:Constructor(name)
 	self.labelKey:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
 	self.labelKey:SetText( name );
 
-    self.node = utils.TreeNode()
+    self.node = Utils.TreeNode()
 
     self.textbox = Turbine.UI.TextBox()
     self.textbox:SetParent(self.node)
@@ -345,7 +331,7 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-    self.chooser = utils.ScrolledTreeView()
+    self.chooser = Utils.ScrolledTreeView()
     self.chooser:SetParent(self)
 
     self.groups = {
@@ -373,10 +359,10 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-	self.channelbtn = utils.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
+	self.channelbtn = Utils.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
 	self.channelbtn:SetParent( self );
 
-    self.namebox = utils.ScrolledTextBox() -- Turbine.UI.TextBox()
+    self.namebox = Utils.ScrolledTextBox() -- Turbine.UI.TextBox()
     self.namebox:SetParent(self)
     self.namebox:SetMultiline(false)
 	self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
@@ -582,11 +568,11 @@ end
 -- Stat Node (stat line in listbox)
 -- ----------------------------------------------------------------------------
 
-local StatNode = class( utils.TreeNode )
+local StatNode = class( Utils.TreeNode )
 
 function StatNode:Constructor( text, key )
 
-	utils.TreeNode.Constructor( self );
+	Utils.TreeNode.Constructor( self );
 
 	self.text = text
 	if key ~= nil then
@@ -649,7 +635,7 @@ end
 -- Stat Node Separator
 -- ----------------------------------------------------------------------------
 
-local StatSep = class( utils.TreeSeparator )
+local StatSep = class( Utils.TreeSeparator )
 
 function StatSep:Refresh() end
 
@@ -657,11 +643,11 @@ function StatSep:Refresh() end
 -- Stat Group
 -- ----------------------------------------------------------------------------
 
-local StatGroup = class( utils.TreeGroup )
+local StatGroup = class( Utils.TreeGroup )
 
 function StatGroup:Constructor( name, nodes )
 
-    utils.TreeGroup.Constructor(self);
+    Utils.TreeGroup.Constructor(self);
 
 	self.name = name;
 
@@ -723,7 +709,7 @@ function StatBrowser:Constructor()
 	-- ListBox for stats
 	-- ------------------------------------------------------------------------
 
-    self.statlist = utils.ScrolledTreeView()
+    self.statlist = Utils.ScrolledTreeView()
     self.statlist:SetParent(self)
 
 	-- ------------------------------------------------------------------------
@@ -755,7 +741,7 @@ function StatBrowser:Constructor()
 		end
 	end
 
-	self.formatbtn = utils.DropDown({"#", "%"});
+	self.formatbtn = Utils.DropDown({"#", "%"});
 	self.formatbtn:SetParent( self );
 	self.formatbtn:SetText(percentages and "%" or "#");
 	self.formatbtn.ItemChanged = function(sender, args) 
@@ -763,7 +749,7 @@ function StatBrowser:Constructor()
 		self:Refresh();
 	end
 
-	self.referencebtn = utils.DropDown({"", "Set", "Cap"});
+	self.referencebtn = Utils.DropDown({"", "Set", "Cap"});
 	self.referencebtn:SetParent( self );
 	self.referencebtn:SetText( "" );
 	self.referencebtn.ItemChanged = function(sender, args)
@@ -1046,12 +1032,12 @@ function _cmd:Execute(cmd, args)
 	elseif ( args == "share" ) then
 		mainwnd.sharebtn:MouseClick()
 	else
-		INFO("/stats [show | hide | toggle | share]")
+		INFO("/%s [show | hide | toggle | share]", cmd)
 	end
 end
 
 Turbine.Shell.AddCommand( "stats", _cmd );
-_cmd:Execute()
+_cmd:Execute("stats")
 atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 
 -- ****************************************************************************
