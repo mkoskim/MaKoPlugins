@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Plugin>
+    <Information>
+        <Name>X - MaKo: Plugin template</Name>
+        <Author>MaKo</Author>
+        <Version>Template</Version>
+        <Description>Plugin Main template</Description>
+    </Information>
+    <Package>MaKoPlugins.Template.Main</Package>
+</Plugin>

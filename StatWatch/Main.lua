@@ -6,14 +6,28 @@
 -- ****************************************************************************
 -- ****************************************************************************
 
-debugging = true
-
+-- ****************************************************************************
+--
+-- Import utils and bring some functions to local namespace
+--
 -- ****************************************************************************
 
 import "MaKoPlugins.Utils";
-import "MaKoPlugins.StatWatch.Conversion";
 
-local utils   = MaKoPlugins.Utils
+local utils = MaKoPlugins.Utils
+
+local PlugIn = utils.PlugIn(plugin)
+local HookTable = utils.HookTable
+
+local println = utils.println
+local INFO = function(fmt, ...) PlugIn:INFO(fmt, unpack(arg)) end
+local DEBUG = function(fmt, ...) PlugIn:DEBUG(fmt, unpack(arg)) end
+local xDEBUG = function(fmt, ...) end
+local atexit = function(callback) PlugIn:atexit(callback) end
+
+-- ----------------------------------------------------------------------------
+
+import "MaKoPlugins.StatWatch.Conversion";
 
 -- ----------------------------------------------------------------------------
 -- Obtain & extending player info, ready for using
@@ -52,10 +66,7 @@ local DefaultSettings = {
 	}
 }
 
-local Settings = plugin.LoadSettings(
-    "StatWatchSettings",
-    DefaultSettings
-)
+local Settings = PlugIn:LoadSettings("StatWatchSettings", DefaultSettings)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -1002,11 +1013,7 @@ function StatBrowser:Unload()
 	-- Save settings
 	-- ------------------------------------------------------------------------
 
-	plugin.SaveSettings(
-		"StatWatchSettings",
-		Settings
-	)
-	self:SetVisible( false );
+	PlugIn:SaveSettings("StatWatchSettings", Settings)
 end
 
 -- ----------------------------------------------------------------------------
@@ -1015,7 +1022,7 @@ end
 
 local mainwnd = StatBrowser()
 
-atexit(function(plugin) mainwnd:Unload() end)
+atexit(function() mainwnd:Unload() end)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -1056,8 +1063,6 @@ atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 -- ****************************************************************************
 -- ****************************************************************************
 
-xDEBUG("Setting hooks...")
-
 function RefreshHandler(sender, args)
 	mainwnd:Refresh()
 	end
@@ -1077,6 +1082,4 @@ local hooks = HookTable({
 
 hooks:Install()
 atexit(function() hooks:Uninstall() end)
-
-xDEBUG("Done.")
 

@@ -10,57 +10,58 @@ import "MaKoPlugins.Utils.Class";
 
 -- ****************************************************************************
 
-function _G.println(fmt, ...)
+function println(fmt, ...)
 	Turbine.Shell.WriteLine(string.format(fmt, unpack(arg)))
 end
 
 -- ****************************************************************************
 
-function _G.INFO(fmt, ...)
-	println( plugin:GetName() .. ": " .. fmt, unpack(arg))
+PlugIn = class()
+
+function PlugIn:Constructor(plugin)
+    self.name = plugin:GetName()
+    self._atexittbl = { }
+
+    plugin.Unload = function() self:Unload() end
 end
 
-function _G.DEBUG(fmt, ...)
-	if debugging then
-		INFO("DEBUG: " .. fmt, unpack(arg))
-	end
+-- ----------------------------------------------------------------------------
+
+function PlugIn:INFO(fmt, ...)
+	println( self.name .. ": " .. fmt, unpack(arg))
 end
 
-function _G.xDEBUG(fmt, ...)
+function PlugIn:DEBUG(fmt, ...)
+	self:INFO("DEBUG: " .. fmt, unpack(arg))
 end
 
--- ****************************************************************************
+-- ----------------------------------------------------------------------------
 
-function plugin.LoadSettings(filename, defaults)
+function PlugIn:atexit(callback)
+    table.insert(self._atexittbl, callback)
+end
+
+function PlugIn:Unload()
+    for _, callback in pairs(self._atexittbl) do
+        callback()
+    end
+end
+
+-- ----------------------------------------------------------------------------
+
+function PlugIn:LoadSettings(filename, defaults)
     return Turbine.PluginData.Load(
-	    Turbine.DataScope.Character,
-	    filename
+        Turbine.DataScope.Character,
+        filename
     ) or defaults;
 end
 
-function plugin.SaveSettings(filename, settings)
+function PlugIn:SaveSettings(filename, settings)
     Turbine.PluginData.Save(
-		Turbine.DataScope.Character,
-		filename,
-		settings
-	)
-end
-
--- ****************************************************************************
-
-plugin._atexittbl = { }
-
-function _G.atexit(callback)
-	table.insert(plugin._atexittbl, callback)
-end
-
-plugin.Unload = function(self)
-    _G.plugin = self
-    for _, callback in pairs(self._atexittbl) do
-		callback()
-	end
-	_G.plugin = nil
-	self._atexittbl = { }
+	    Turbine.DataScope.Character,
+	    filename,
+	    settings
+    )
 end
 
 -- ****************************************************************************
@@ -75,19 +76,18 @@ function _G.dumptable(tbl)
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Hooking objects
+-- Hooking callbacks to objects
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-_G.HookTable = class()
+HookTable = class()
 
 function HookTable:Constructor( hooks )
     self.hooks = hooks
 end
 
 function HookTable:Install()
-	xDEBUG("Installing hooks...")
 	for _, entry in pairs(self.hooks) do
 		if entry.object ~= nil then
 			AddCallback(entry.object, entry.event, entry.callback)
@@ -96,7 +96,6 @@ function HookTable:Install()
 end
 
 function HookTable:Uninstall()
-	xDEBUG("Removing hooks...")
 	for _, entry in pairs(self.hooks) do
 		if entry.object ~= nil then
 			AddCallback(entry.object, entry.event, entry.callback)
