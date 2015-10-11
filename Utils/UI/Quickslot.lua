@@ -14,23 +14,19 @@ Quickslot = class(Turbine.UI.Lotro.Quickslot)
 -- in RTPlugin by MathWold)
 -- ----------------------------------------------------------------------------
 
-SkinnedQuickslot = class(Turbine.UI.Control)
+SkinnedQuickslot = class(Frame)
 
 function SkinnedQuickslot:Constructor()
-	Turbine.UI.Control.Constructor( self );
+	Frame.Constructor( self );
 
-	self:SetBackColor(Turbine.UI.Color(1,0.8,0.8,0.8));
+    self.shortcut = nil
 
 	self.qs = Quickslot();
 	self.qs:SetParent( self );
 	self.qs:SetPosition(1, 1);
-	self.qs:SetAllowDrop(false);
 
-	--[[self.qs.DragDrop=function()
-		local sc=Turbine.UI.Lotro.Shortcut(Turbine.UI.Lotro.ShortcutType.Alias,"");
-		sc:SetData(self.ShortcutData);
-		self:SetShortcut(sc);
-	end]]--
+	self.qs:SetAllowDrop(false);
+	self.qs.DragDrop=function() self:SetShortcut(self.shortcut); end
 
 	self.qs.Skin = Turbine.UI.Button();
 	self.qs.Skin:SetParent( self );
@@ -58,7 +54,7 @@ function SkinnedQuickslot:Constructor()
 end
 
 function SkinnedQuickslot:SetSize(w, h)
-	Turbine.UI.Control.SetSize(self, w, h)
+	Frame.SetSize(self, w, h)
 	self.qs:SetSize(w - 2, h - 2);
 	self.qs.Skin:SetSize(w - 2, h - 2);
 end
@@ -69,6 +65,7 @@ function SkinnedQuickslot:SetShortcut( shortcut )
    	    shortcut and Turbine.UI.Color(1, 1, 1) or
    	    Turbine.UI.Color(0.5, 0.5, 0.5)
    	);
+    self.shortcut = shortcut
 end
 
 function SkinnedQuickslot:SetText( text )

@@ -335,7 +335,7 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-    self.chooser = Utils.UI.ScrolledTreeView()
+    self.chooser = Utils.UI.TreeView()
     self.chooser:SetParent(self)
 
     self.groups = {
@@ -714,7 +714,7 @@ function StatBrowser:Constructor()
 	-- ListBox for stats
 	-- ------------------------------------------------------------------------
 
-    self.statlist = Utils.UI.ScrolledTreeView()
+    self.statlist = Utils.UI.TreeView()
     self.statlist:SetParent(self)
 
 	-- ------------------------------------------------------------------------

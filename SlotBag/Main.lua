@@ -58,6 +58,17 @@ function MainWindow:Constructor()
     self.slot:SetPosition(20, 40)
     self.slot:SetSize(200, 40)
 
+    self.clickbox = Utils.UI.ClickBox(
+        -- Utils.UI.Bitmap.Edit.Start
+        -- Utils.UI.Bitmap.Edit.Accept
+        -- Utils.UI.Bitmap.Edit.Cancel
+        -- Utils.UI.Bitmap.Lock.Open
+        Utils.UI.Bitmap.Lock.Closed
+    )
+    self.clickbox:SetParent(self)
+    self.clickbox:SetSize(16, 16)
+    self.clickbox:SetPosition(20, 90)
+
 	-- ------------------------------------------------------------------------
 	-- Place window
 	-- ------------------------------------------------------------------------
