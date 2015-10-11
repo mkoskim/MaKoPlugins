@@ -327,6 +327,10 @@ function StatShareWindow:Constructor()
 	Utils.UI.Window.Constructor(self);
 
 	self:SetText("Share stats");
+
+	self:SetMinimumWidth(310);
+	self:SetMaximumWidth(310);
+
 	self:SetResizable(true);
 
     -- ------------------------------------------------------------------------
@@ -362,15 +366,16 @@ function StatShareWindow:Constructor()
 	self.channelbtn = Utils.UI.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
 	self.channelbtn:SetParent( self );
 
-    self.namebox = Utils.UI.ScrolledTextBox() -- Turbine.UI.TextBox()
+    self.namebox = Utils.UI.ScrolledTextBox()
     self.namebox:SetParent(self)
     self.namebox:SetMultiline(false)
 	self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
     self.namebox:SetText("")
 
-	self.sendbtn = Turbine.UI.Lotro.Quickslot();
+	self.sendbtn = Utils.UI.SkinnedQuickslot();
 	self.sendbtn:SetParent( self );
-	self.sendbtn:SetAllowDrop(false);
+    self.sendbtn:SetText("Send")
+	-- self.sendbtn:SetAllowDrop(false);
     self.sendbtn.MouseClick = function(sender, args)
         -- self.sendbtn:SetShortcut(nil)
     end
@@ -431,28 +436,28 @@ function StatShareWindow:SizeChanged( args )
 
     -- ------------------------------------------------------------------------
 
-    local btntop = self:GetHeight() - (40 + 60) + 40 + 5
+    local btntop = self:GetHeight() - 45
 
 	self.channelbtn:SetWidth(60);
-	self.channelbtn:SetPosition(20, btntop + 10)
+	self.channelbtn:SetPosition(20, btntop)
 
 	self.namebox:SetSize(
-	    self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 40) - 20,
+	    self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 35) - 20,
 	    18
 	);
-	self.namebox:SetPosition(20 + 65, btntop + 10)
+	self.namebox:SetPosition(20 + 65, btntop + 1)
 
     -- ------------------------------------------------------------------------
 
 	self.createbtn:SetSize( 60, 18 );
 	self.createbtn:SetPosition(
-		self:GetWidth() - 60 - 40 - 25,
-		btntop + 10
+		self:GetWidth() - 60 - 35 - 25,
+		btntop
 	);
 
-	self.sendbtn:SetSize( 40, 40 );
+	self.sendbtn:SetSize( 37, 20 );
 	self.sendbtn:SetPosition(
-	    self:GetWidth()  - 40 - 20,
+	    self:GetWidth()  - 35 - 20,
 		btntop
 	);
 end

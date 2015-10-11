@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Plugin>
+    <Information>
+        <Name>X - MaKo: SlotBag</Name>
+        <Author>MaKo</Author>
+        <Version>Experimental</Version>
+        <Description>Shortcut slot bag(s)</Description>
+    </Information>
+    <Package>MaKoPlugins.SlotBag.Main</Package>
+</Plugin>

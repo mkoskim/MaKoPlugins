@@ -24,7 +24,7 @@ function ShortcutPanel:Constructor()
 
     -- ------------------------------------------------------------------------
 
-    self.textbox = Utils.ScrolledTextBox()
+    self.textbox = Utils.UI.ScrolledTextBox()
     self.textbox:SetParent(self)
     self.textbox:SetMultiline(true)
     self.textbox:SetSelectable(true)
@@ -32,7 +32,7 @@ function ShortcutPanel:Constructor()
 
     -- ------------------------------------------------------------------------
 
-	self.quickslot = Utils.Quickslot();
+	self.quickslot = Utils.UI.Quickslot();
 	self.quickslot:SetParent( self );
 	self.quickslot:SetAllowDrop(true);
 

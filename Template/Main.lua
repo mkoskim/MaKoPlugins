@@ -38,10 +38,10 @@ local Settings = PlugIn:LoadSettings("TemplateSettings", DefaultSettings)
 -- ****************************************************************************
 -- ****************************************************************************
 
-MainWindow = class(Turbine.UI.Lotro.Window);
+MainWindow = class(Utils.UI.Window);
 
 function MainWindow:Constructor()
-	Turbine.UI.Lotro.Window.Constructor(self);
+	Utils.UI.Window.Constructor(self);
 
 	-- ------------------------------------------------------------------------
 	-- Window properties
@@ -60,7 +60,7 @@ function MainWindow:Constructor()
 		Settings.WindowPosition.Top
 	)
 	self:SetSize(
-		310, -- Settings.WindowPosition.Width,
+		Settings.WindowPosition.Width,
 		Settings.WindowPosition.Height
 	)
 
@@ -70,7 +70,8 @@ function MainWindow:Constructor()
 	-- store the visibility state before unloading.
 	-- ------------------------------------------------------------------------
 
-	self:SetVisible(Settings.WindowVisible);
+	-- self:SetVisible(Settings.WindowVisible);
+	self:SetVisible(true);
 
     self.VisibleChanged = function(sender, args)
 	    Settings.WindowVisible = self:IsVisible()

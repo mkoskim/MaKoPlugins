@@ -1,26 +1,9 @@
 -------------------------------------------------------------------------------
 
-DONE:
+TODO:
 
-- Fixed: Power/Morale update works wrongly
-
-- DONE: Setting reference values
-
-- DONE: Setting cap ratings as reference (when they exist). Can be computed
-  from segment info.
-
-- DONE: Colors for differences
-
-- DONE: Mastery is nowadays capped at 80k (200%). Mastery percentage
-  calculation has no repeating block
-
-- DONE: Dump stats to chat
-  
-- Fixed: Autoloading
-
--------------------------------------------------------------------------------
-
-MISC:
+- Share window: Would be nice if created shortcut would disappear after
+  sharing, to prevent unnecessary spamming.
 
 - 'Essence' values? Divide stat by corresponding greater essence rating, so
   that you could estimate how many essences you would need to reach the rating.
@@ -39,4 +22,25 @@ MISC:
 -------------------------------------------------------------------------------
 
 FIX:
+
+-------------------------------------------------------------------------------
+
+DONE:
+
+- Fixed: Power/Morale update works wrongly
+
+- DONE: Setting reference values
+
+- DONE: Setting cap ratings as reference (when they exist). Can be computed
+  from segment info.
+
+- DONE: Colors for differences
+
+- DONE: Mastery is nowadays capped at 80k (200%). Mastery percentage
+  calculation has no repeating block
+
+- DONE: Dump stats to chat
+  
+- Fixed: Autoloading
+
 

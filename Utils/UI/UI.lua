@@ -235,14 +235,3 @@ function ScrolledTextBox:SetSize(w, h)
 	self.scrollbar:SetSize(10, self:GetHeight())
 end
 
--- ****************************************************************************
--- ****************************************************************************
---
--- Attempt to make quickslot with working Drag'n'Drop... Quickslot is a
--- component that holds Shortcut object.
---
--- ****************************************************************************
--- ****************************************************************************
-
-Quickslot = class(Turbine.UI.Lotro.Quickslot)
-

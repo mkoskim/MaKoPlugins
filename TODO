@@ -1,6 +1,8 @@
+-------------------------------------------------------------------------------
+
 TODO:
 
-- Write user instructions
+- Partly done: Write user instructions
 
 - ZIP is 'MaKoPlugins-master', not 'MaKoPlugins'
 
@@ -8,5 +10,13 @@ TODO:
   gets correct width (GetWidth), but height (GetHeight) is not changed at
   all.
 
-- Custom Window class: one that recognizes both ESC and F12
+- DropDown: this should close list when pressed again. Now, the problem is
+  that list closes itself by getting FocusLost, and then the label reopens
+  it.
+
+-------------------------------------------------------------------------------
+
+DONE:
+
+- DONE: Custom Window class: one that recognizes both ESC and F12
 

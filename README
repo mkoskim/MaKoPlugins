@@ -18,9 +18,5 @@ PLUGINS:
 
 For more information, see README in StatWatch directory.
 
-EXPERIMENTALS: These plugins are work-in-progress and do not necessarily do anything.
-
-* ACA: Alternative CA.
-
-* BuffWatch: The plan is to see the precence and/or absence of certain buffs at fixed location on a game window.
+EXPERIMENTALS: There are several experimental plugin projects at various stages. If you don't like having experimental plugin entries on your plugin manager list, you can remove the corresponding .plugin files.
 
