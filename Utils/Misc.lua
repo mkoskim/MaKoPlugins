@@ -19,6 +19,7 @@ end
 PlugIn = class()
 
 function PlugIn:Constructor(plugin)
+    self.plugin = plugin
     self.name = plugin:GetName()
     self._atexittbl = { }
 
@@ -33,6 +34,16 @@ end
 
 function PlugIn:DEBUG(fmt, ...)
 	self:INFO("DEBUG: " .. fmt, unpack(arg))
+end
+
+-- ----------------------------------------------------------------------------
+
+function PlugIn:SetOptionsPanel(optpanel)
+    self.optpanel = optpanel
+    
+    self.plugin.GetOptionsPanel = function()
+        return self.optpanel
+    end
 end
 
 -- ----------------------------------------------------------------------------

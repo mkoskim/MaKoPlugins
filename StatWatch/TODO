@@ -2,10 +2,6 @@
 
 TODO:
 
-- Small movable buttons (skinned shortcuts, or even buttons) for access,
-  show/hide in options panel: Not all people have the same amount of quickslots
-  on screen as I do.
-
 - Share window: Would be nice if created shortcut would disappear after
   sharing, to prevent unnecessary spamming.
 
@@ -46,5 +42,9 @@ DONE:
 - DONE: Dump stats to chat
   
 - Fixed: Autoloading
+
+- DONE: Small movable buttons (skinned shortcuts, or even buttons) for access,
+  show/hide in options panel: Not all people have the same amount of quickslots
+  on screen as I do.
 
 

@@ -1021,6 +1021,47 @@ atexit(function() mainwnd:Unload() end)
 -- ****************************************************************************
 -- ****************************************************************************
 --
+-- Options panel
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+OptionsPanel = class(Turbine.UI.Control)
+
+function OptionsPanel:Constructor()
+    Turbine.UI.Control.Constructor(self)
+    
+    self:SetSize(200, 300)
+
+    local checkbox1 = Turbine.UI.Lotro.CheckBox()
+    checkbox1:SetParent(self)
+    checkbox1:SetPosition(10, 10)
+    checkbox1:SetSize(280, 20)
+    checkbox1:SetText("Browse window toggle button")
+
+    checkbox1:SetChecked(mainwnd.toggle:IsVisible())
+    checkbox1.CheckedChanged = function(sender, args)
+        mainwnd.toggle:SetVisible(checkbox1:IsChecked())
+    end
+
+    local checkbox2 = Turbine.UI.Lotro.CheckBox()
+    checkbox2:SetParent(self)
+    checkbox2:SetPosition(10, 30)
+    checkbox2:SetSize(280, 20)
+    checkbox2:SetText("Share window toggle button")
+
+    checkbox2:SetChecked(mainwnd.sharewindow.toggle:IsVisible())
+    checkbox2.CheckedChanged = function(sender, args)
+        mainwnd.sharewindow.toggle:SetVisible(checkbox2:IsChecked())
+    end
+
+end
+
+PlugIn:SetOptionsPanel(OptionsPanel())
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
 -- Command line interface
 --
 -- ****************************************************************************

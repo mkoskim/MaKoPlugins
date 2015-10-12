@@ -79,10 +79,14 @@ end
 
 -- ----------------------------------------------------------------------------
 
+PlugIn:SetOptionsPanel(ShortcutPanel())
+
+--[[
 local optionsPanel = ShortcutPanel()
 
 plugin.GetOptionsPanel = function(self)
     xDEBUG("GetOptionsPanel")
     return optionsPanel;
 end
+]]--
 
