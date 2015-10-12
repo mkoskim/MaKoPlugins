@@ -14,6 +14,10 @@ function Window:Constructor()
     Turbine.UI.Lotro.Window.Constructor(self)
 
     self:SetWantsKeyEvents(true)
+
+    self.VisibleChanged = function(sender, args)
+        self._visible = self:IsVisible()
+    end
 end
 
 -- ----------------------------------------------------------------------------
@@ -32,12 +36,6 @@ function Window:KeyDown(args)
             self.storedVisibility = nil
         end
     end
-end
-
--- ----------------------------------------------------------------------------
-
-function Window:VisibleChanged(args)
-    self._visible = self:IsVisible()
 end
 
 -- ----------------------------------------------------------------------------
@@ -68,11 +66,14 @@ Window.Undecorated = class(Turbine.UI.Window)
 
 function Window.Undecorated:Constructor()
     Turbine.UI.Window.Constructor(self)
+
     self:SetWantsKeyEvents(true)
+    self.VisibleChanged = function(sender, args)
+        self._visible = self:IsVisible()
+    end
 end
 
 Window.Undecorated.KeyDown = Window.KeyDown
-Window.Undecorated.VisibleChanged = Window.VisibleChanged
 Window.Undecorated.Serialize = Window.Serialize
 Window.Undecorated.Deserialize = Window.Deserialize
 
