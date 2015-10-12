@@ -1,6 +1,6 @@
 #!/bin/sh
 
-rm release/*
+rm -f release/*.zip
 
 (cd ..; zip -r MaKoPlugins/release/StatWatch.zip \
     MaKoPlugins/StatWatch.plugin \
