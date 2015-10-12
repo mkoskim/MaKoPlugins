@@ -77,11 +77,11 @@ function TreeGroup:Constructor()
 	self.iconExpand = Turbine.UI.Control();
 	self.iconExpand:SetParent( self );
 	self.iconExpand:SetSize( 16, 16 );
-	self.iconExpand:SetBackground( Bitmap.Expand );
+	self.iconExpand:SetBackground( Icons.Expand );
 	self.iconExpand:SetBlendMode( Turbine.UI.BlendMode.AlphaBlend );
 	self.iconExpand:SetMouseVisible( false );
 
-	self:SetBackground( Bitmap.HeaderBackground.Blue );
+	self:SetBackground( Icons.HeaderBackground.Blue );
 end
 
 function TreeGroup:SetExpanded(status)
@@ -91,7 +91,7 @@ end
 
 function TreeGroup:MouseClick(args)
 	self.iconExpand:SetBackground(
-	    self:IsExpanded() and Bitmap.Collapse or Bitmap.Expand
+	    self:IsExpanded() and Icons.Collapse or Icons.Expand
     );
 end
 

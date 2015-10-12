@@ -53,21 +53,28 @@ function MainWindow:Constructor()
 
 	-- ------------------------------------------------------------------------
 
+    self.grid = Utils.UI.Quickslot.Grid()
+    self.grid:SetParent(self)
+    self.grid:SetPosition(20, 30)
+    -- self.grid:SetSize(200, 200)
+
+    --[[
     self.slot = Utils.UI.Ext.LabelledQuickslot()
     self.slot:SetParent(self)
     self.slot:SetPosition(20, 40)
     self.slot:SetSize(200, 40)
 
-    self.clickbox = Utils.UI.ClickBox(
+    self.clickbox = Utils.UI.IconButton(
         -- Utils.UI.Bitmap.Edit.Start
         -- Utils.UI.Bitmap.Edit.Accept
         -- Utils.UI.Bitmap.Edit.Cancel
         -- Utils.UI.Bitmap.Lock.Open
-        Utils.UI.Bitmap.Lock.Closed
+        Utils.UI.Icons.Lock.Closed
     )
     self.clickbox:SetParent(self)
     self.clickbox:SetSize(16, 16)
     self.clickbox:SetPosition(20, 90)
+    ]]--
 
 	-- ------------------------------------------------------------------------
 	-- Place window
@@ -99,8 +106,11 @@ end
 -- Layout elements
 -- ----------------------------------------------------------------------------
 
-function MainWindow:SizeChanged( sender, args )
-
+function MainWindow:SizeChanged( args )
+    self.grid:SetSize(
+        self:GetWidth()  - 20 - 20,
+        self:GetHeight() - 30 - 20
+    )
 end
 
 -- ----------------------------------------------------------------------------

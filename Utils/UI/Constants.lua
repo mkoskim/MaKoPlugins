@@ -3,10 +3,10 @@
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
--- Bitmaps
+-- Built-in bitmaps
 -- ----------------------------------------------------------------------------
 
-Bitmap = {
+Icons = {
     Close = {                       -- 16x16
         Blue = {
             Disabled = nil,
@@ -36,7 +36,7 @@ Bitmap = {
             Pressed  = 0x41000278
         }
     },
-    
+
     CheckBox = {                    -- 16x16
         Unchecked = 0x410001A4,
         Checked   = 0x410001A3
@@ -62,21 +62,28 @@ Bitmap = {
         Disabled = 0x410202F4,
     },
 
-    --[[
-    ChatBubble =
+    ChatBubble =                    -- 16x16
     {
-        NoFocus1 = 0x41007E1D,      -- 16x16
-        NoFocus2 = 0x41007E1E,      -- 16x16
-        Focus = 0x41007E1F,         -- 16x16
+        Disabled = nil,
+        NoFocus  = 0x41007E1D,
+        Focus    = 0x41007E1F,
+        Pressed  = nil, --0x41007E1E,
     },
 
+    --[[
     CoolDown = {                    -- 32x32
         Begin = 0x41007E35,
         End   = 0x41007E70,
     },
     ]]--
 
-    -- Icons used to edit LI names
+    -- LockOpen   = 0x410001CF,        -- 20x20
+    -- LockClosed = 0x410001D0,        -- 20x20
+    -- ]]--
+
+    -- ------------------------------------------------------------------------
+    -- Icons in LI name editing
+    -- ------------------------------------------------------------------------
 
     Edit = {                        -- 16 × 16
         Start = {
@@ -99,7 +106,9 @@ Bitmap = {
         }
     },
 
-    -- Locking control icons
+    -- ------------------------------------------------------------------------
+    -- Locking control icons in bags
+    -- ------------------------------------------------------------------------
 
     Lock = {                        -- 16x16
         Open = {
@@ -116,33 +125,32 @@ Bitmap = {
         }
     },
 
-    -- LockOpen   = 0x410001CF,        -- 20x20
-    -- LockClosed = 0x410001D0,        -- 20x20
-    -- ]]--
+    -- ------------------------------------------------------------------------
+    -- Equipment slot background images
+    -- ------------------------------------------------------------------------
 
-    -- Equipment slot backgrounds
-
-    EquipSlot = {                       -- 44x44
-        Back = 0x41007EE9,
-        MainHand = 0x41007EEA,
-        OffHand = 0x41007EEB,
-        Ranged = 0x41007EEC,
-        Head = 0x41007EED,
-        Shoulders = 0x41007EEE,
-        Neck = 0x41007EEF,
-        Chest = 0x41007EF0,
-        Legs = 0x41007EF1,
-        Hands = 0x41007EF2,
-        RingLeft = 0x41007EF3,          -- Ring 1
-        RingRight = 0x41007EF4,         -- Ring 2
-        Feet = 0x41007EF5,
-        EarLeft = 0x41007EF6,           -- Ear 1
-        EarRight = 0x41007EF7,          -- Ear 2
-        WristLeft = 0x41007EF8,         -- Bracelet 1
-        WristRight = 0x41007EF9,        -- Bracelet 2
-        Pocket = 0x41007EFA,
-        Tool = 0x41007EFB,
-        Class = 0x410E8680
+    EquipmentSlot = {                                   -- 44x44
+        [Turbine.Gameplay.Equipment.Undefined]          = nil,
+        [Turbine.Gameplay.Equipment.Head]               = 0x41007EED,
+        [Turbine.Gameplay.Equipment.Chest]              = 0x41007EF0,
+        [Turbine.Gameplay.Equipment.Legs]               = 0x41007EF1,
+        [Turbine.Gameplay.Equipment.Gloves]             = 0x41007EF2,
+        [Turbine.Gameplay.Equipment.Boots]              = 0x41007EF5,
+        [Turbine.Gameplay.Equipment.Shoulder]           = 0x41007EEE,
+        [Turbine.Gameplay.Equipment.Back]               = 0x41007EE9,
+        [Turbine.Gameplay.Equipment.Bracelet1]          = 0x41007EF8,
+        [Turbine.Gameplay.Equipment.Bracelet2]          = 0x41007EF9,
+        [Turbine.Gameplay.Equipment.Necklace]           = 0x41007EEF,
+        [Turbine.Gameplay.Equipment.Ring1]              = 0x41007EF3,
+        [Turbine.Gameplay.Equipment.Ring2]              = 0x41007EF4,
+        [Turbine.Gameplay.Equipment.Earring1]           = 0x41007EF6,
+        [Turbine.Gameplay.Equipment.Earring2]           = 0x41007EF7,
+        [Turbine.Gameplay.Equipment.Pocket]             = 0x41007EFA,
+        [Turbine.Gameplay.Equipment.PrimaryWeapon]      = 0x41007EEA,
+        [Turbine.Gameplay.Equipment.SecondaryWeapon]    = 0x41007EEB,
+        [Turbine.Gameplay.Equipment.RangedWeapon]       = 0x41007EEC,
+        [Turbine.Gameplay.Equipment.CraftTool]          = 0x41007EFB,
+        [Turbine.Gameplay.Equipment.Class]              = 0x410E8680,
     },
 }
 

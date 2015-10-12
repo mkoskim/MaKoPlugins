@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Plugin>
+    <Information>
+        <Name>X - MaKo: Build Swap</Name>
+        <Author>MaKo</Author>
+        <Version>Experimental</Version>
+        <Description>Ease design and swapping different builds.</Description>
+    </Information>
+    <Package>MaKoPlugins.BuildSwap.Main</Package>
+</Plugin>

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+rm release/*
+
+(cd ..; zip -r MaKoPlugins/release/StatWatch.zip \
+    MaKoPlugins/StatWatch.plugin \
+    MaKoPlugins/StatWatch/ \
+    MaKoPlugins/Utils/ \
+)
+
+(cd ..; zip -r MaKoPlugins/release/Utils.zip \
+    MaKoPlugins/Utils/ \
+)
+
+(cd ..; zip -r MaKoPlugins/release/Quickslot.zip \
+    MaKoPlugins/Utils/UI/Quickslot.lua \
+)

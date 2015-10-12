@@ -1,19 +1,21 @@
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- ClickBox is a button-like control. Providing four images (disabled,
--- no focus, focus and pressed) it acts like a button.
+-- IconButton is a button that takes four icons (disabled, no focus, focus,
+-- pressed). TODO: Unfinished implementation.
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-ClickBox = class(Turbine.UI.Control)
+IconButton = class(Turbine.UI.Control)
 
-function ClickBox:Constructor(iconset)
+function IconButton:Constructor(iconset)
     Turbine.UI.Control.Constructor(self)
 
     self.iconset = iconset
     self:SetBackground(iconset.NoFocus)
+
+    -- ------------------------------------------------------------------------
 
     self.MouseEnter = function(sender, args)
         if not self:IsEnabled() then return end
@@ -25,10 +27,12 @@ function ClickBox:Constructor(iconset)
         self:SetBackground(self.iconset.NoFocus)
     end
 
+    -- ------------------------------------------------------------------------
+
     self.MouseDown = function(sender, args)
         if not self:IsEnabled() then return end
         self:SetBackground(self.iconset.Pressed)
-    end    
+    end
 
     self.MouseUp = function(sender, args)
         if not self:IsEnabled() then return end
@@ -36,7 +40,7 @@ function ClickBox:Constructor(iconset)
     end
 end
 
-function ClickBox:SetEnabled(state)
+function IconButton:SetEnabled(state)
     Turbine.UI.Control.SetEnabled(self, state)
     if state then
         self:SetBackground(self.iconset.NoFocus)

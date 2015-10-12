@@ -82,7 +82,7 @@ end
 -- Layout elements
 -- ----------------------------------------------------------------------------
 
-function MainWindow:SizeChanged( sender, args )
+function MainWindow:SizeChanged(args)
 
 end
 

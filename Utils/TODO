@@ -4,6 +4,13 @@ TODO:
 
 - Misc.lua: Some kind of command line helper...
 
+- Layouts: I'm so sick computing coordinates by hand
+
+- Options menu for quickslots: if options menu is attached, right click
+  opens it.
+
+- Partly Done: SkinnedQuickslot: Implement so that you can choose custom skins.
+
 -------------------------------------------------------------------------------
 
 DONE:

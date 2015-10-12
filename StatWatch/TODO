@@ -2,13 +2,17 @@
 
 TODO:
 
+- Small movable buttons (skinned shortcuts, or even buttons) for access,
+  show/hide in options panel: Not all people have the same amount of quickslots
+  on screen as I do.
+
 - Share window: Would be nice if created shortcut would disappear after
   sharing, to prevent unnecessary spamming.
 
 - 'Essence' values? Divide stat by corresponding greater essence rating, so
   that you could estimate how many essences you would need to reach the rating.
 
-- No update when minimized / group is collapsed
+- No update (uninstall handlers) when minimized / group is collapsed
 
 - Separate window for real time stat tracking?
 

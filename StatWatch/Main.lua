@@ -35,24 +35,58 @@ local armortype = ArmorType[player:GetClass()]
 -- ****************************************************************************
 
 local DefaultSettings = {
-	WindowPosition = {
-		Left = 0,
-		Top  = 0,
-		Width = 200,
-		Height = 200
-	},
-	WindowVisible = true,
+	SettingsVersion = 2,
+
 	ExpandedGroups = { },
 	ShowPercentages = true,
-	ShareWindowPosition = {
-	    Left = 0,
-	    Top = 0,
-	    Width = 200,
-	    Height = 200,
+
+	BrowseWindow = {
+		Left = 0, Top  = 0,
+		Width = 200, Height = 200,
+		Visible = true,
+		Toggle = {
+		    Left = 200, Top = 0, Visible = true
+		}
+	},
+
+	ShareWindow = {
+	    Left = 0, Top = 0,
+	    Width = 200, Height = 200,
+	    Visible = false,
+		Toggle = {
+		    Left = 230, Top = 0, Visible = true
+		}
 	}
 }
 
 local Settings = PlugIn:LoadSettings("StatWatchSettings", DefaultSettings)
+
+-- ----------------------------------------------------------------------------
+-- Converting old settings to new ones
+-- ----------------------------------------------------------------------------
+
+if Settings["SettingsVersion"] == nil then
+    Settings = {
+        ExpandedGroups = Settings.ExpandedGroups,
+        ShowPercentages = Settings.ShowPercentages,
+
+        BrowseWindow = {
+            Left    = Settings.WindowPosition.Left,
+            Top     = Settings.WindowPosition.Top,
+            Width   = Settings.WindowPosition.Width,
+            Height  = Settings.WindowPosition.Height,
+            Visible = Settings.WindowVisible,
+        },
+        ShareWindow = DefaultSettings.ShareWindow,
+        SettingsVersion = 1,
+    }
+end
+
+if Settings["SettingsVersion"] == 1 then
+    Settings.BrowseWindow.Toggle = DefaultSettings.BrowseWindow.Toggle
+    Settings.ShareWindow.Toggle = DefaultSettings.ShareWindow.Toggle
+    Settings.SettingsVersion = 2
+end
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -372,13 +406,13 @@ function StatShareWindow:Constructor()
 	self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
     self.namebox:SetText("")
 
-	self.sendbtn = Utils.UI.SkinnedQuickslot();
-	self.sendbtn:SetParent( self );
+	self.sendbtn = Utils.UI.QuickslotButton(
+	    -- Utils.UI.IconButton(Utils.UI.Icons.ChatBubble)
+	)
+	-- self.sendbtn:SetSize(16, 16)
     self.sendbtn:SetText("Send")
-	-- self.sendbtn:SetAllowDrop(false);
-    self.sendbtn.MouseClick = function(sender, args)
-        -- self.sendbtn:SetShortcut(nil)
-    end
+	self.sendbtn:SetSize( 37, 20 );
+	self.sendbtn:SetParent( self )
 
     self.createbtn = Turbine.UI.Lotro.Button()
 	self.createbtn:SetParent( self );
@@ -386,7 +420,7 @@ function StatShareWindow:Constructor()
     self.createbtn.MouseClick = function(sender, args)
         local channel = self.channelbtn:GetText()
         local target = (channel == "/tell") and self.namebox:GetText() or ""
-        
+
         local text = { }
         for _, key in pairs(self.order) do
             local group = self.groups[key]
@@ -406,18 +440,12 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-	if Settings["ShareWindowPosition"] == nil then
-	    Settings["ShareWindowPosition"] = DefaultSettings["ShareWindowPosition"]
-	end
+    self.toggle = Utils.UI.ToggleWindowButton("share", self)
+    self.toggle:Deserialize(Settings.ShareWindow.Toggle)
 
-	self:SetPosition(
-		Settings.ShareWindowPosition.Left,
-		Settings.ShareWindowPosition.Top
-	)
-	self:SetSize(
-		310, -- Settings.WindowPosition.Width,
-		Settings.ShareWindowPosition.Height
-	)
+    -- ------------------------------------------------------------------------
+
+    self:Deserialize(Settings.ShareWindow)
 
     self:SetVisible(false)
 end
@@ -455,7 +483,6 @@ function StatShareWindow:SizeChanged( args )
 		btntop
 	);
 
-	self.sendbtn:SetSize( 37, 20 );
 	self.sendbtn:SetPosition(
 	    self:GetWidth()  - 35 - 20,
 		btntop
@@ -693,9 +720,9 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 
-StatBrowser = class(Utils.UI.Window);
+BrowseWindow = class(Utils.UI.Window);
 
-function StatBrowser:Constructor()
+function BrowseWindow:Constructor()
 	Utils.UI.Window.Constructor(self);
 
 	-- ------------------------------------------------------------------------
@@ -884,16 +911,10 @@ function StatBrowser:Constructor()
 	-- Place window
 	-- ------------------------------------------------------------------------
 
-	self:SetPosition(
-		Settings.WindowPosition.Left,
-		Settings.WindowPosition.Top
-	)
-	self:SetSize(
-		310, -- Settings.WindowPosition.Width,
-		Settings.WindowPosition.Height
-	)
+    self.toggle = Utils.UI.ToggleWindowButton("stats", self)
+    self.toggle:Deserialize(Settings.BrowseWindow.Toggle)
 
-	self:SetVisible(Settings.WindowVisible);
+    self:Deserialize(Settings.BrowseWindow)
 
 	-- ------------------------------------------------------------------------
 	-- Update node values
@@ -901,16 +922,16 @@ function StatBrowser:Constructor()
 
 	self:Refresh()
 
-    self.VisibleChanged = function(sender, args)
-	    Settings.WindowVisible = self:IsVisible()
-	end
+    -- self.VisibleChanged = function(sender, args)
+	--    Settings.WindowVisible = self:IsVisible()
+	-- end
 end
 
 -- ----------------------------------------------------------------------------
 -- Layout elements
 -- ----------------------------------------------------------------------------
 
-function StatBrowser:SizeChanged( sender, args )
+function BrowseWindow:SizeChanged( sender, args )
 
 	self.statlist:SetPosition( 20, 40 );
 	self.statlist:SetSize(
@@ -952,7 +973,7 @@ end
 -- Update stat node values
 -- ----------------------------------------------------------------------------
 
-function StatBrowser:Refresh()
+function BrowseWindow:Refresh()
 
 	if not self:IsVisible() then
 		return
@@ -972,32 +993,14 @@ end
 -- Save settings on unload
 -- ----------------------------------------------------------------------------
 
-function StatBrowser:Unload()
+function BrowseWindow:Unload()
+	Settings.BrowseWindow = self:Serialize()
+    Settings.BrowseWindow.Toggle = self.toggle:Serialize()
 
-	-- ------------------------------------------------------------------------
-	-- Store window position & size
-	-- ------------------------------------------------------------------------
-
-	Settings.WindowPosition = {
-	    Left = self:GetLeft(),
-	    Top = self:GetTop(),
-	    Height = self:GetHeight(),
-	    Width = self:GetWidth()
-	};
-
-	Settings.ShareWindowPosition = {
-	    Left = self.sharewindow:GetLeft(),
-	    Top = self.sharewindow:GetTop(),
-	    Height = self.sharewindow:GetHeight(),
-	    Width = self.sharewindow:GetWidth()
-	}
+	Settings.ShareWindow  = self.sharewindow:Serialize()
+    Settings.ShareWindow.Toggle = self.sharewindow.toggle:Serialize()
 
 	Settings.ShowPercentages = percentages;
-
-	-- ------------------------------------------------------------------------
-	-- Store groups' expand information
-	-- ------------------------------------------------------------------------
-
 	Settings.ExpandedGroups = self.statlist:ExpandedGroups()
 
 	-- ------------------------------------------------------------------------
@@ -1011,7 +1014,7 @@ end
 -- Create window
 -- ----------------------------------------------------------------------------
 
-local mainwnd = StatBrowser()
+local mainwnd = BrowseWindow()
 
 atexit(function() mainwnd:Unload() end)
 

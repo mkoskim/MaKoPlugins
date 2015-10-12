@@ -34,29 +34,6 @@ function ShortcutPanel:Constructor()
 
 	self.quickslot = Utils.UI.Quickslot();
 	self.quickslot:SetParent( self );
-	self.quickslot:SetAllowDrop(true);
-
-    self.quickslot.DragDrop = function(sender, args)
-        DEBUG("DragDrop")
-        -- dumptable(args)
-        local shortcut = args.DragDropInfo:GetShortcut()
-        -- dumptable(shortcut.__implementation)
-        DEBUG("Shortcut: %d", shortcut:GetType())
-    end
-
-    self.quickslot.DragEnter = function(sender, args)
-        DEBUG("DragEnter")
-        dumptable(args)
-        -- local shortcut = args.DragDropInfo:GetShortcut()
-        -- dumptable(shortcut)
-    end
-
-    self.quickslot.DragLeave = function(sender, args)
-        DEBUG("DragLeave")
-        dumptable(args)
-        -- local shortcut = args.DragDropInfo:GetShortcut()
-        -- dumptable(shortcut)
-    end
 
     self.createbtn = Turbine.UI.Lotro.Button()
 	self.createbtn:SetParent( self );

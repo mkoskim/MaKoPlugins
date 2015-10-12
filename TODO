@@ -2,6 +2,17 @@
 
 TODO:
 
+- DropDown: this should close list when pressed again. Now, the problem is
+  that list closes itself by getting FocusLost, and then the label reopens
+  it.
+
+- Quickslot development: I want a quickslot bag, where each individual
+  quickslot can be: (1) skinned alias (right click to change skin), (2)
+  sequence slot, (3) quickslot menu (open more options), (4) regular
+  quickslot.
+
+- Quickslots: Aliases cant be dragged to built-in quickslots.
+
 - Partly done: Write user instructions
 
 - ZIP is 'MaKoPlugins-master', not 'MaKoPlugins'
@@ -9,10 +20,6 @@ TODO:
 - Investigate: When creating plugin options panel, SizeChanged()
   gets correct width (GetWidth), but height (GetHeight) is not changed at
   all.
-
-- DropDown: this should close list when pressed again. Now, the problem is
-  that list closes itself by getting FocusLost, and then the label reopens
-  it.
 
 -------------------------------------------------------------------------------
 
