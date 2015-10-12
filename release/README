@@ -1,0 +1,21 @@
+
+
+
+                        LOTRO PLUGIN RELEASES
+                        ---------------------
+                        
+INSTALLING:
+
+(1) Click ZIP package and choose 'View Raw' for download.
+
+(2) Extract ZIP to LotRO plugin folder.
+
+PLUGINS:
+
+StatWatch: Plugin to track character stats in real time, compare different
+setups and share stats with friends.
+
+Utils: Library used by my plugins for other developers.
+
+Quickslot: Quickslot implementation from Utils library.
+

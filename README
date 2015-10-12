@@ -4,19 +4,5 @@
                             -----------------
 
 
-INSTALLING:
-
-1) Load plugins as ZIP by pressing 'Download as ZIP' button
-
-2) Extract ZIP to LoTRO plugin folder
-
-3) Rename directory from 'MaKoPlugins-master' to 'MaKoPlugins'
-
-PLUGINS:
-
-* STATWATCH: StatWatch is a plugin to track, compare and share your character's stats in real time. This plugin was initially created for Warden to see the effects of stacking buffs to stats.
-
-For more information, see README in StatWatch directory.
-
-EXPERIMENTALS: There are several experimental plugin projects at various stages. If you don't like having experimental plugin entries on your plugin manager list, you can remove the corresponding .plugin files.
+INSTALLING: See release folder.
 
