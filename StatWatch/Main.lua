@@ -920,7 +920,7 @@ function BrowseWindow:Constructor()
 	-- Update node values
 	-- ------------------------------------------------------------------------
 
-	self:Refresh()
+	-- self:Refresh()
 
     -- self.VisibleChanged = function(sender, args)
 	--    Settings.WindowVisible = self:IsVisible()
@@ -975,11 +975,13 @@ end
 
 function BrowseWindow:Refresh()
 
+	--[[
 	if not self:IsVisible() then
 		return
 	end
+    ]]--
 
-	xDEBUG("Updating...")
+	xDEBUG("BrowseWindow:Refresh")
 
 	local nodes = self.statlist:GetNodes()
 	local count = nodes:GetCount();
@@ -987,6 +989,11 @@ function BrowseWindow:Refresh()
 		local node = nodes:Get( i );
 		node:Refresh();
 	end
+end
+
+function BrowseWindow:SetVisible(state)
+    Utils.UI.Window.SetVisible(self, state)
+    if state then self:Refresh() end
 end
 
 -- ----------------------------------------------------------------------------
@@ -1072,12 +1079,12 @@ local _cmd = Turbine.ShellCommand();
 function _cmd:Execute(cmd, args)
 	if ( args == "show" ) then
 		mainwnd:SetVisible( true );
-		mainwnd:Refresh()
+		-- mainwnd:Refresh()
 	elseif ( args == "hide" ) then
 		mainwnd:SetVisible( false );
 	elseif ( args == "toggle" ) then
 		mainwnd:SetVisible( not mainwnd:IsVisible() );
-		mainwnd:Refresh()
+		-- mainwnd:Refresh()
 	elseif ( args == "share" ) then
 		mainwnd.sharebtn:MouseClick()
 	else
@@ -1099,7 +1106,7 @@ atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 -- ****************************************************************************
 
 function RefreshHandler(sender, args)
-	mainwnd:Refresh()
+	if mainwnd:IsVisible() then mainwnd:Refresh() end
 	end
 
 local hooks = HookTable({

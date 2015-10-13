@@ -19,9 +19,17 @@ TODO:
 - It would be good to have stats and differences in different formats,
   that is, for example, stats as percentages and differences in ratings.
 
+- Take stats from chat and use them as reference. We should add player
+  name (and class?) to chat message.
+
+- What if we combine those two floating buttons in single window?
+
 -------------------------------------------------------------------------------
 
 FIX:
+
+- ToggleButton handles ESC which hides it when pressing ESC to close
+  windows. ToggleButtons should stay visible. Fix this.
 
 -------------------------------------------------------------------------------
 
@@ -47,4 +55,6 @@ DONE:
   show/hide in options panel: Not all people have the same amount of quickslots
   on screen as I do.
 
+- Fixed: Seems that stat fields are sometimes empty when opening window.
+  It happens on my champ. Check & fix.
 

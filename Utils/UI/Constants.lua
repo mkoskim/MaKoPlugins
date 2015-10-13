@@ -7,6 +7,8 @@
 -- ----------------------------------------------------------------------------
 
 Icons = {
+    SadPanda = 0x410F24E3,          -- 32x32
+
     Close = {                       -- 16x16
         Blue = {
             Disabled = nil,
@@ -19,7 +21,7 @@ Icons = {
             NoFocus  = 0x41005F41,
             Focus    = 0x41005F50,
             Pressed  = 0x41005F49
-        }
+        },
     },
 
     Arrow = {                       -- 25x25
@@ -34,7 +36,7 @@ Icons = {
             NoFocus  = 0x41000276,
             Focus    = 0x41000279,
             Pressed  = 0x41000278
-        }
+        },
     },
 
     CheckBox = {                    -- 16x16
@@ -53,10 +55,80 @@ Icons = {
     Collapse = 0x41007E26,          -- 16x16
     Expand = 0x41007E27,            -- 16x16
 
+    -- ------------------------------------------------------------------------
+    -- Resize icon in chat window corner
+    Resize = 0x4100013D,            -- 16x16
+
+    -- ------------------------------------------------------------------------
+
     HeaderBackground = {            -- 9x16
         Blue = 0x411105A6,
         Red  = 0x41110DB5
     },
+
+    Background = {
+        Item = {                    -- 32x32
+            Grey   = 0x41000001,
+            Green  = 0x41000002,
+            Purple = 0x41000003,
+            Teal   = 0x41000004,
+            Gold   = 0x41000005,
+            Bronze = 0x41000E44,    -- e.g. food
+            0x41001430,             -- Sort of sparkling teal
+            0x410030C4,             -- Darker purple..
+            0x410030E2,             -- Brownish...
+            0x4101DBB0,             -- PvP green
+            --- And more, and more...
+        },
+        Quickslot = 0x41007F4A,     -- empty quickslot
+    },
+
+    -- Animated borders...
+    Animated = {
+        YellowDashBorder = {        -- 32x32
+            0x41007F09,
+            0x41007F0A,
+            0x41007F0B,
+            0x41007F0C,
+            0x41007F0D,
+            -- 0x41020101,          -- Some extras...?
+            -- 0x41020102,
+            -- 0x41020103,
+        },
+        WhiteDashBorder = {         -- 32x32
+            0x41007F0E,
+            0x41007F0F,
+            0x41007F10,
+            0x41007F11,
+            0x41007F12,
+            0x41007F13,
+            0x41007F14,
+            0x41007F15,
+        }
+    },
+
+    -- ------------------------------------------------------------------------
+
+    ToolBar = {                     -- 25x25
+        Help = {
+            NoFocus = 0x41101830,
+            Focus   = 0x4110182F,
+            Pressed = 0x41101831,
+        },
+        Options = {
+            NoFocus = 0x41101833,
+            Focus   = 0x41101832,
+            Pressed = 0x41101834,
+        },
+    },
+
+    -- ------------------------------------------------------------------------
+
+    Cursor = {
+        Resize = 0x41007E20,        -- 32x32
+    },
+
+    -- ------------------------------------------------------------------------
 
     Voice = {                       -- 20x20
         Disabled = 0x410202F4,
@@ -65,9 +137,9 @@ Icons = {
     ChatBubble =                    -- 16x16
     {
         Disabled = nil,
-        NoFocus  = 0x41007E1D,
+        NoFocus  = 0x41007E1E,
         Focus    = 0x41007E1F,
-        Pressed  = nil, --0x41007E1E,
+        Pressed  = 0x41007E1D,
     },
 
     --[[
@@ -107,7 +179,7 @@ Icons = {
     },
 
     -- ------------------------------------------------------------------------
-    -- Locking control icons in bags
+    -- Lock control icons in bags
     -- ------------------------------------------------------------------------
 
     Lock = {                        -- 16x16
@@ -151,6 +223,88 @@ Icons = {
         [Turbine.Gameplay.Equipment.RangedWeapon]       = 0x41007EEC,
         [Turbine.Gameplay.Equipment.CraftTool]          = 0x41007EFB,
         [Turbine.Gameplay.Equipment.Class]              = 0x410E8680,
+    },
+
+    -- ------------------------------------------------------------------------
+    -- Class icons
+    -- ------------------------------------------------------------------------
+
+    Class = {
+        i50x50 = {
+            [Turbine.Gameplay.Class.Burglar]    = 0x410000E4,
+            [Turbine.Gameplay.Class.Captain]    = 0x410000E5,
+            [Turbine.Gameplay.Class.Champion]   = 0x410000E6,
+            [Turbine.Gameplay.Class.Guardian]   = 0x410000E7,
+            [Turbine.Gameplay.Class.Hunter]     = 0x410000E8,
+            [Turbine.Gameplay.Class.LoreMaster] = 0x410000E9,
+            [Turbine.Gameplay.Class.Minstrel]   = 0x410000EA,
+            
+            [Turbine.Gameplay.Class.Reaver]     = 0x41007DC9,
+            [Turbine.Gameplay.Class.Weaver]     = 0x41007DCA,
+            [Turbine.Gameplay.Class.BlackArrow] = 0x41007DCB,
+            [Turbine.Gameplay.Class.WarLeader]  = 0x41007DCC,
+            [Turbine.Gameplay.Class.Stalker]    = 0x41007DCD,
+            
+            [Turbine.Gameplay.Class.Chicken]    = 0x41091DEF,
+            [Turbine.Gameplay.Class.Troll]      = 0x41091DF0,
+            [Turbine.Gameplay.Class.Ranger]     = 0x41091DF1,
+
+            [Turbine.Gameplay.Class.Defiler]    = 0x410E6BF6,
+        },
+        -- 48x48 is found, but spread over the ID space
+        i32x32 = {
+            [Turbine.Gameplay.Class.Warden]     = 0x41108673,
+            [Turbine.Gameplay.Class.Burglar]    = 0x41108674,
+            [Turbine.Gameplay.Class.Captain]    = 0x41108675,
+            [Turbine.Gameplay.Class.Champion]   = 0x41108676,
+            [Turbine.Gameplay.Class.Guardian]   = 0x41108677,
+            [Turbine.Gameplay.Class.Hunter]     = 0x41108678,
+            [Turbine.Gameplay.Class.LoreMaster] = 0x41108679,
+            [Turbine.Gameplay.Class.Minstrel]   = 0x4110867A,
+            [Turbine.Gameplay.Class.RuneKeeper] = 0x4110867B,
+        },
+        i25x25 = {
+            [Turbine.Gameplay.Class.Minstrel]   = 0x41007DD6,
+            [Turbine.Gameplay.Class.Captain]    = 0x41007DD7,
+            [Turbine.Gameplay.Class.Guardian]   = 0x41007DD8,
+            [Turbine.Gameplay.Class.LoreMaster] = 0x41007DD9,
+            [Turbine.Gameplay.Class.Hunter]     = 0x41007DDA,
+            [Turbine.Gameplay.Class.Burglar]    = 0x41007DDB,
+            [Turbine.Gameplay.Class.Champion]   = 0x41007DDC,
+
+            [Turbine.Gameplay.Class.Reaver]     = 0x41007DDD,
+            [Turbine.Gameplay.Class.WarLeader]  = 0x41007DDE,
+            [Turbine.Gameplay.Class.BlackArrow] = 0x41007DDF,
+            [Turbine.Gameplay.Class.Weaver]     = 0x41007DE0,
+            [Turbine.Gameplay.Class.Stalker]    = 0x41007DE1,
+            
+            [Turbine.Gameplay.Class.Chicken]    = 0x41091DDE,
+            [Turbine.Gameplay.Class.Troll]      = 0x41091DDF,
+            [Turbine.Gameplay.Class.Ranger]     = 0x41091DE0,
+
+            [Turbine.Gameplay.Class.Defiler]    = 0x410E6BF5,
+        },
+        i20x20 = {
+            [Turbine.Gameplay.Class.Minstrel]   = 0x41007DE6,
+            [Turbine.Gameplay.Class.Captain]    = 0x41007DE7,
+            [Turbine.Gameplay.Class.Guardian]   = 0x41007DE8,
+            [Turbine.Gameplay.Class.LoreMaster] = 0x41007DE9,
+            [Turbine.Gameplay.Class.Hunter]     = 0x41007DEA,
+            [Turbine.Gameplay.Class.Burglar]    = 0x41007DEB,
+            [Turbine.Gameplay.Class.Champion]   = 0x41007DEC,
+
+            [Turbine.Gameplay.Class.Reaver]     = 0x41007DED,
+            [Turbine.Gameplay.Class.Weaver]     = 0x41007DEE,
+            [Turbine.Gameplay.Class.BlackArrow] = 0x41007DEF,
+            [Turbine.Gameplay.Class.WarLeader]  = 0x41007DF0,
+            [Turbine.Gameplay.Class.Stalker]    = 0x41007DF1,
+
+            [Turbine.Gameplay.Class.Chicken]    = 0x41091DE1,
+            [Turbine.Gameplay.Class.Troll]      = 0x41091DE2,
+            [Turbine.Gameplay.Class.Ranger]     = 0x41091DE3,
+
+            [Turbine.Gameplay.Class.Defiler]    = 0x410E6BF4,
+        },
     },
 }
 

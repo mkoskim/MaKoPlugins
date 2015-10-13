@@ -13,6 +13,7 @@ Window = class(Turbine.UI.Lotro.Window)
 function Window:Constructor()
     Turbine.UI.Lotro.Window.Constructor(self)
 
+    self:HideOnEsc(true)
     self:SetWantsKeyEvents(true)
 
     self.VisibleChanged = function(sender, args)
@@ -22,8 +23,14 @@ end
 
 -- ----------------------------------------------------------------------------
 
+function Window:HideOnEsc(state)
+    self.hideOnEsc = state
+end
+
+-- ----------------------------------------------------------------------------
+
 function Window:KeyDown(args)
-    if args.Action == Actions.ESC then
+    if args.Action == Actions.ESC and self.hideOnEsc then
         if self:IsVisible() then
             self:SetVisible(false)
         end
@@ -67,19 +74,26 @@ Window.Undecorated = class(Turbine.UI.Window)
 function Window.Undecorated:Constructor()
     Turbine.UI.Window.Constructor(self)
 
+    -- By default, undecorated windows like quickslot grids and such, dont
+    -- hide on Esc.
+
+    self:HideOnEsc(false)
     self:SetWantsKeyEvents(true)
+
     self.VisibleChanged = function(sender, args)
         self._visible = self:IsVisible()
     end
 end
 
+Window.Undecorated.HideOnEsc = Window.HideOnEsc
 Window.Undecorated.KeyDown = Window.KeyDown
 Window.Undecorated.Serialize = Window.Serialize
 Window.Undecorated.Deserialize = Window.Deserialize
 
 -- ****************************************************************************
 --
--- Window with Deusdictum dragbar
+-- Window with Deusdictum dragbar: I might need to melt the implementation
+-- here, so that I can add resizing widget to resizable undecorated windows.
 --
 -- ****************************************************************************
 
@@ -89,7 +103,7 @@ local function LoadDragBar()
 end
 
 if pcall(LoadDragBar) then
-    Window.Draggable = class(Turbine.UI.Window)
+    Window.Draggable = class(Turbine.UI.Window.Undecorated)
 
     function Window.Draggable:Constructor()
         Turbine.UI.Window.Constructor(self)
@@ -111,8 +125,8 @@ if pcall(LoadDragBar) then
         if self.dragbar then self.dragbar:RecalculatePosition() end
     end
 
-    Window.Draggable.Serialize = Window.Serialize
-    Window.Draggable.Deserialize = Window.Deserialize
+    Window.Draggable.Serialize = Window.Undecorated.Serialize
+    Window.Draggable.Deserialize = Window.Undecorated.Deserialize
 
     function Window.Draggable:SetResizable(state)
         -- TODO: Something sensible?
