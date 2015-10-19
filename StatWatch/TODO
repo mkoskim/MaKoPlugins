@@ -2,10 +2,6 @@
 
 TODO:
 
-- Cap for Outgoing Healing: We probably don't implement this... Although
-  outgoing healing and tactical mastery have different cap rating, it might
-  be better to view outgoing heals as percentage.
-
 - 'Essence' values? Divide stat by corresponding greater essence rating, so
   that you could estimate how many essences you would need to reach the rating.
 
@@ -31,6 +27,14 @@ TODO:
 -------------------------------------------------------------------------------
 
 FIX:
+
+-------------------------------------------------------------------------------
+
+POSTPONED / IGNORED:
+
+- Cap for Outgoing Healing: We probably don't implement this... Although
+  outgoing healing and tactical mastery have different cap rating, it might
+  be better to view outgoing heals as percentage.
 
 -------------------------------------------------------------------------------
 
