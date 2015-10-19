@@ -72,6 +72,12 @@ end
 function QuickslotButton:SetShortcut( shortcut )
     self.quickslot:SetShortcut(shortcut)
     self.shortcut = shortcut
-   	self.skin:SetEnabled(shortcut ~= nil)
+   	-- self.skin:SetEnabled(shortcut ~= nil)
+   	self:SetEnabled(shortcut ~= nil)
+end
+
+function QuickslotButton:SetEnabled( state )
+    self.skin:SetEnabled( state )
+    self.quickslot:SetVisible( state )
 end
 

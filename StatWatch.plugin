@@ -2,11 +2,11 @@
 <Plugin><Information>
 <Name>StatWatch</Name>
 <Author>MaKo</Author>
-<Version>0.7</Version>
+<Version>0.9</Version>
 <Description>
 StatWatch is a plugin to track stats in real time (swapping gear pieces or getting buffs), and share your stats with your friends.
 
-WEBSITE: https://github.com/mkoskim/MaKoPlugins
+WEBSITE: http://www.lotrointerface.com/downloads/fileinfo.php?id=937
 </Description>
 </Information>
 <Package>MaKoPlugins.StatWatch.Main</Package>

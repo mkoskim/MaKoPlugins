@@ -11,6 +11,8 @@ TreeView = class(Frame)
 function TreeView:Constructor()
 	Frame.Constructor(self)
 
+    -- ------------------------------------------------------------------------
+
 	self.tree = Turbine.UI.TreeView()
 	self.tree:SetParent(self)
 	self.tree:SetIndentationWidth( 20 );
@@ -26,14 +28,37 @@ function TreeView:Constructor()
     self.CollapseAll = function(sender) self.tree:CollapseAll() end
     self.ExpandAll = function(sender) self.tree:ExpandAll() end
     self.GetNodes = function(sender) return self.tree:GetNodes() end
+
+    -- ------------------------------------------------------------------------
+
+	self.iconExpandAll = Turbine.UI.Control();
+	self.iconExpandAll:SetParent( self );
+	self.iconExpandAll:SetSize( 16, 16 );
+	self.iconExpandAll:SetBackground( Icons.Expand );
+	self.iconExpandAll:SetBlendMode( Turbine.UI.BlendMode.AlphaBlend );
+    self.iconExpandAll.MouseClick = function(sender, args)
+        self:ExpandAll()
+    end
+
+	self.iconCollapseAll = Turbine.UI.Control();
+	self.iconCollapseAll:SetParent( self );
+	self.iconCollapseAll:SetSize( 16, 16 );
+	self.iconCollapseAll:SetBackground( Icons.Collapse );
+	self.iconCollapseAll:SetBlendMode( Turbine.UI.BlendMode.AlphaBlend );
+    self.iconCollapseAll.MouseClick = function(sender, args)
+        self:CollapseAll()
+    end
 end
 
 function TreeView:SizeChanged(sender, args)
 	self.tree:SetPosition(1, 1)
 	self.tree:SetSize(self:GetWidth() - 2, self:GetHeight() - 2)
 
-	self.scrollbar:SetPosition(self:GetWidth() - 10, 1)
-	self.scrollbar:SetSize(10, self:GetHeight() - 2)
+	self.scrollbar:SetPosition(self:GetWidth() - 10, 1 + 16)
+	self.scrollbar:SetSize(10, self:GetHeight() - 2 - 16)
+
+    self.iconExpandAll:SetPosition(self:GetWidth()-16-16, 1)
+    self.iconCollapseAll:SetPosition(self:GetWidth()-16, 1)
 end
 
 function TreeView:Expand(expanded)

@@ -397,7 +397,7 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-	self.channelbtn = Utils.UI.DropDown({"/f", "/ra", "/k", "/say", "/tell" })
+	self.channelbtn = Utils.UI.DropDown({"/f", "/ra", "/k", "/o", "/say", "/tell" })
 	self.channelbtn:SetParent( self );
 
     self.namebox = Utils.UI.ScrolledTextBox()
@@ -413,6 +413,10 @@ function StatShareWindow:Constructor()
     self.sendbtn:SetText("Send")
 	self.sendbtn:SetSize( 37, 20 );
 	self.sendbtn:SetParent( self )
+    self.sendbtn.quickslot.MouseClick = function(sender, args)
+        self.sendbtn:SetEnabled(false)
+    end
+    -- self.sendbtn.quickslot:SetVisible(false)
 
     self.createbtn = Turbine.UI.Lotro.Button()
 	self.createbtn:SetParent( self );
@@ -433,8 +437,13 @@ function StatShareWindow:Constructor()
 
         self.sendbtn:SetShortcut(Turbine.UI.Lotro.Shortcut(
             Turbine.UI.Lotro.ShortcutType.Alias,
-            string.format("%s %s Stats:\n%s", channel, target, text)
+            string.format("%s %s Stats %s (%s):\n%s",
+                channel, target,
+                player:GetName(), Utils.ClassAsString[player:GetClass()],
+                text
+            )
         ))
+        -- self.sendbtn:SetEnabled.quickslot:SetVisible(true)
     end
 
 
@@ -487,6 +496,15 @@ function StatShareWindow:SizeChanged( args )
 	    self:GetWidth()  - 35 - 20,
 		btntop
 	);
+end
+
+-- ----------------------------------------------------------------------------
+--
+-- ----------------------------------------------------------------------------
+
+function StatShareWindow:SetVisible(state)
+    Utils.UI.Window.SetVisible(self, state)
+    if state then self:Refresh() end
 end
 
 -- ----------------------------------------------------------------------------
@@ -728,15 +746,15 @@ function BrowseWindow:Constructor()
 	-- ------------------------------------------------------------------------
 	-- Window properties
 	-- ------------------------------------------------------------------------
-	
+
 	self:SetText("Stats");
-	
+
 	self:SetMinimumWidth(310);
 	self:SetMaximumWidth(310);
 	self:SetMinimumHeight(250);
 
 	self:SetResizable(true);
-	
+
 	-- ------------------------------------------------------------------------
 	-- ListBox for stats
 	-- ------------------------------------------------------------------------
@@ -755,7 +773,7 @@ function BrowseWindow:Constructor()
 	self.sharebtn:SetText( "Share" );
 	self.sharebtn.MouseClick = function(sender, args)
         local exposing = not self.sharewindow:IsVisible()
-        if exposing then self.sharewindow:Refresh() end
+        -- if exposing then self.sharewindow:Refresh() end
         self.sharewindow:SetVisible(exposing)
     end
 

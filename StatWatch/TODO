@@ -2,8 +2,9 @@
 
 TODO:
 
-- Share window: Would be nice if created shortcut would disappear after
-  sharing, to prevent unnecessary spamming.
+- Cap for Outgoing Healing: We probably don't implement this... Although
+  outgoing healing and tactical mastery have different cap rating, it might
+  be better to view outgoing heals as percentage.
 
 - 'Essence' values? Divide stat by corresponding greater essence rating, so
   that you could estimate how many essences you would need to reach the rating.
@@ -24,16 +25,23 @@ TODO:
 
 - What if we combine those two floating buttons in single window?
 
+- Sharing: Show overcapping values, too, to see if e.g. mits for T2C
+  are overcapped enough.
+
 -------------------------------------------------------------------------------
 
 FIX:
 
-- ToggleButton handles ESC which hides it when pressing ESC to close
-  windows. ToggleButtons should stay visible. Fix this.
-
 -------------------------------------------------------------------------------
 
 DONE:
+
+- DONE: Share window: Would be nice if created shortcut would disappear after
+  sharing, to prevent unnecessary spamming.
+
+- DONE: Officier channel to channel selection list
+
+- DONE: Expand/Collapse All
 
 - Fixed: Power/Morale update works wrongly
 
@@ -57,4 +65,8 @@ DONE:
 
 - Fixed: Seems that stat fields are sometimes empty when opening window.
   It happens on my champ. Check & fix.
+
+- DONE: ToggleButton handles ESC which hides it when pressing ESC to close
+  windows. ToggleButtons should stay visible. Fix this.
+
 
