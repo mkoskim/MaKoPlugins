@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PluginConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Id>937</Id>
+  <Name>StatWatch</Name>
+  <Version>0.9</Version>
+  <Author>MaKo</Author>
+  <InfoUrl>http://www.lotrointerface.com/downloads/info937</InfoUrl>
+  <DownloadUrl>http://www.lotrointerface.com/downloads/download937</DownloadUrl>
+  <Descriptors>
+    <descriptor>MaKoPlugins\StatWatch.plugin</descriptor>
+  </Descriptors>
+  <Dependencies>
+    <dependency>0</dependency>
+  </Dependencies>
+</PluginConfig>
+

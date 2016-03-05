@@ -2,6 +2,9 @@
 
 TODO:
 
+- There are separate icons for Expand/Collapse all (++ and --). Find their
+  IDs. Those icons should also contain non-focus / focus / pressed versions.
+
 - 'Essence' values? Divide stat by corresponding greater essence rating, so
   that you could estimate how many essences you would need to reach the rating.
 

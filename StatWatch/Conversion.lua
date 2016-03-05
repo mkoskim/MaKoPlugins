@@ -161,6 +161,7 @@ end
 -- ****************************************************************************
 
 ArmorType = {
+	[Turbine.Gameplay.Class.Beorning] = "MediumArmor",
 	[Turbine.Gameplay.Class.Burglar] = "MediumArmor",
 	[Turbine.Gameplay.Class.Captain] = "HeavyArmor",
 	[Turbine.Gameplay.Class.Champion] = "HeavyArmor",

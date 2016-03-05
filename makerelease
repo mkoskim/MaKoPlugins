@@ -4,6 +4,7 @@ rm -f release/*.zip
 
 (cd ..; zip -r MaKoPlugins/release/StatWatch.zip \
     MaKoPlugins/StatWatch.plugin \
+    MaKoPlugins/StatWatch.plugincompendium \
     MaKoPlugins/StatWatch/ \
     MaKoPlugins/Utils/ \
 )

@@ -11,6 +11,7 @@
 -- ----------------------------------------------------------------------------
 
 ClassAsString = {
+	[Turbine.Gameplay.Class.Beorning] = "Beorning",
 	[Turbine.Gameplay.Class.Burglar] = "Burglar",
 	[Turbine.Gameplay.Class.Captain] = "Captain",
 	[Turbine.Gameplay.Class.Champion] = "Champion",
