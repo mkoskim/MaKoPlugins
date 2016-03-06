@@ -35,28 +35,28 @@ local armortype = ArmorType[player:GetClass()]
 -- ****************************************************************************
 
 local DefaultSettings = {
-	SettingsVersion = 2,
+    SettingsVersion = 2,
 
-	ExpandedGroups = { },
-	ShowPercentages = true,
+    ExpandedGroups = { },
+    ShowPercentages = true,
 
-	BrowseWindow = {
-		Left = 0, Top  = 0,
-		Width = 200, Height = 200,
-		Visible = true,
-		Toggle = {
-		    Left = 200, Top = 0, Visible = true
-		}
-	},
+    BrowseWindow = {
+        Left = 0, Top  = 0,
+        Width = 200, Height = 200,
+        Visible = true,
+        Toggle = {
+            Left = 200, Top = 0, Visible = true
+        }
+    },
 
-	ShareWindow = {
-	    Left = 0, Top = 0,
-	    Width = 200, Height = 200,
-	    Visible = false,
-		Toggle = {
-		    Left = 230, Top = 0, Visible = true
-		}
-	}
+    ShareWindow = {
+        Left = 0, Top = 0,
+        Width = 200, Height = 200,
+        Visible = false,
+        Toggle = {
+            Left = 230, Top = 0, Visible = true
+        }
+    }
 }
 
 local Settings = PlugIn:LoadSettings("StatWatchSettings", DefaultSettings)
@@ -92,21 +92,19 @@ end
 -- ****************************************************************************
 
 local function FormatNumber(number, decimals)
-
-	if number < 1000 then
-		return string.format("%." .. tostring(decimals or 0) .. "f", number)
-	-- elseif number < 1000 then
-	--	return string.format("%.0f", number)
-	elseif number < 150000 then
-		return string.format("%d,%03d", (number+0.5)/1000, (number+0.5)%1000)
-	elseif number < 1000000 then
-		return string.format("%.1fk", (number+0.5)/1000)
-	elseif number < 1500000 then
-		return string.format("%d,%03.1fk", (number+0.5)/1000000, ((number+0.5)%1000000)/1000)
-	else
-		return string.format("%.2fM", number/1e6)
-	end
-
+    if number < 1000 then
+        return string.format("%." .. tostring(decimals or 0) .. "f", number)
+    -- elseif number < 1000 then
+    --	return string.format("%.0f", number)
+    elseif number < 150000 then
+        return string.format("%d,%03d", (number+0.5)/1000, (number+0.5)%1000)
+    elseif number < 1000000 then
+        return string.format("%.1fk", (number+0.5)/1000)
+    elseif number < 1500000 then
+        return string.format("%d,%03.1fk", (number+0.5)/1000000, ((number+0.5)%1000000)/1000)
+    else
+        return string.format("%.2fM", number/1e6)
+    end
 end
 
 -- ****************************************************************************
@@ -133,26 +131,26 @@ local function FormatELM(value) return string.format("x %3.1f", value) end
 -- ----------------------------------------------------------------------------
 
 function Stat:Constructor(key, rawvalue, percentage, fmt)
-	self.key = key
-	self.rawvalue = rawvalue
-	self.refvalue = nil
-	self.percentage = percentage
+    self.key = key
+    self.rawvalue = rawvalue
+    self.refvalue = nil
+    self.percentage = percentage
 
-	if fmt ~= nil then
-		self.fmt = fmt
-	else
-		self.fmt = function(number) return FormatNumber(number) end
-	end
+    if fmt ~= nil then
+        self.fmt = fmt
+    else
+        self.fmt = function(number) return FormatNumber(number) end
+    end
 
-	stats[key] = self
+    stats[key] = self
 end
 
 -- ----------------------------------------------------------------------------
 
 function Stat:Rating() return self.rawvalue() end
 function Stat:Percentage()
-	return ToPercent( self.percentage, self:Rating(), player:GetLevel() )
-	end
+    return ToPercent( self.percentage, self:Rating(), player:GetLevel() )
+    end
 
 function Stat:RatingAsString()
     return self.fmt( self:Rating() )
@@ -397,29 +395,29 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-	self.channelbtn = Utils.UI.DropDown({"/f", "/ra", "/k", "/o", "/say", "/tell" })
-	self.channelbtn:SetParent( self );
+    self.channelbtn = Utils.UI.DropDown({"/f", "/ra", "/k", "/o", "/say", "/tell" })
+    self.channelbtn:SetParent( self );
 
     self.namebox = Utils.UI.ScrolledTextBox()
     self.namebox:SetParent(self)
     self.namebox:SetMultiline(false)
-	self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
+    self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
     self.namebox:SetText("")
 
-	self.sendbtn = Utils.UI.QuickslotButton(
-	    -- Utils.UI.IconButton(Utils.UI.Icons.ChatBubble)
-	)
-	-- self.sendbtn:SetSize(16, 16)
+    self.sendbtn = Utils.UI.QuickslotButton(
+        -- Utils.UI.IconButton(Utils.UI.Icons.ChatBubble)
+    )
+    -- self.sendbtn:SetSize(16, 16)
     self.sendbtn:SetText("Send")
-	self.sendbtn:SetSize( 37, 20 );
-	self.sendbtn:SetParent( self )
+    self.sendbtn:SetSize( 37, 20 );
+    self.sendbtn:SetParent( self )
     self.sendbtn.quickslot.MouseClick = function(sender, args)
         self.sendbtn:SetEnabled(false)
     end
     -- self.sendbtn.quickslot:SetVisible(false)
 
     self.createbtn = Turbine.UI.Lotro.Button()
-	self.createbtn:SetParent( self );
+    self.createbtn:SetParent( self );
     self.createbtn:SetText("Create")
     self.createbtn.MouseClick = function(sender, args)
         local channel = self.channelbtn:GetText()
@@ -465,37 +463,37 @@ end
 
 function StatShareWindow:SizeChanged( args )
 
-	self.chooser:SetPosition( 20, 40 );
-	self.chooser:SetSize(
-	    self:GetWidth() - 2*20,
-	    self:GetHeight() - (40 + 60)
+    self.chooser:SetPosition( 20, 40 );
+    self.chooser:SetSize(
+        self:GetWidth() - 2*20,
+        self:GetHeight() - (40 + 60)
     );
 
     -- ------------------------------------------------------------------------
 
     local btntop = self:GetHeight() - 45
 
-	self.channelbtn:SetWidth(60);
-	self.channelbtn:SetPosition(20, btntop)
+    self.channelbtn:SetWidth(60);
+    self.channelbtn:SetPosition(20, btntop)
 
-	self.namebox:SetSize(
-	    self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 35) - 20,
-	    18
-	);
-	self.namebox:SetPosition(20 + 65, btntop + 1)
+    self.namebox:SetSize(
+        self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 35) - 20,
+        18
+    );
+    self.namebox:SetPosition(20 + 65, btntop + 1)
 
     -- ------------------------------------------------------------------------
 
-	self.createbtn:SetSize( 60, 18 );
-	self.createbtn:SetPosition(
-		self:GetWidth() - 60 - 35 - 25,
-		btntop
-	);
+    self.createbtn:SetSize( 60, 18 );
+    self.createbtn:SetPosition(
+        self:GetWidth() - 60 - 35 - 25,
+        btntop
+    );
 
-	self.sendbtn:SetPosition(
-	    self:GetWidth()  - 35 - 20,
-		btntop
-	);
+    self.sendbtn:SetPosition(
+        self:GetWidth()  - 35 - 20,
+        btntop
+    );
 end
 
 -- ----------------------------------------------------------------------------

@@ -18,18 +18,17 @@ debugging = true
 -- - Assign effects (buffs, debuffs) to each slot
 -- - Maintain a database for effects, to be chosen to slots
 --
+-- TODO:
+-- - Slot editor
+-- - GetSize() reports the original size, not stretched size
+--
+-- DONE:
+-- - DONE: Whole WatchWindow is stretched to get icons resized with text at top
+-- - DONE: Timer for chosen effects
 
 -- ****************************************************************************
 
-import "MaKoPlugins.Utils";
-
-local utils   = MaKoPlugins.Utils
-local _plugin = utils.PlugIn()
-
-local println = utils.println
-local INFO    = function(str) _plugin:INFO(str) end
-local DEBUG   = function(str) _plugin:DEBUG(str) end
-local xDEBUG  = function(str) _plugin:xDEBUG(str) end
+import "MaKoPlugins.BuffWatch.Bindings"
 
 -- ****************************************************************************
 
@@ -50,15 +49,21 @@ local effects = player:GetEffects()
 -- ****************************************************************************
 -- ****************************************************************************
 
-local Settings = {
-	WatchWindowPosition = {
-		Left = 0,
-		Top  = 0,
-		Width = 200,
-		Height = 200
-	},
-	WatchWindowVisible = true,
-    WatchSlots = 5,
+local DefaultSettings = {
+    LogWindow = {
+        Left = 0,
+        Top  = 0,
+        Width = 200,
+        Height = 200,
+        Visible = true
+    },
+    WatchWindow = {
+        Left = 0,
+        Top  = 0,
+        Width = 200,
+        Height = 200,
+        Visible = true
+    },
     WatchedEffects = {
     },
     Logging = {
@@ -67,17 +72,203 @@ local Settings = {
     },
 }
 
-Settings = Turbine.PluginData.Load(
-		Turbine.DataScope.Character,
-		"BuffWatchSettings"
-	) or Settings;
+local Settings = PlugIn:LoadSettings("BuffWatchSettings", DefaultSettings)
 
--- --[[ -- Debugging
+-- ----------------------------------------------------------------------------
+-- Converting old settings to new ones
+-- ----------------------------------------------------------------------------
+
+if Settings["SettingsVersion"] == nil then
+    Settings = {
+        LogWindow = {
+            Left    = Settings.WindowPosition.Left,
+            Top     = Settings.WindowPosition.Top,
+            Width   = Settings.WindowPosition.Width,
+            Height  = Settings.WindowPosition.Height,
+            Visible = true,
+        },
+
+        WatchWindow = DefaultSettings.WatchWindow,
+        WatchSlots = DefaultSettings.WatchSlots,
+        WatchedEffects = DefaultSettings.WatchedEffects,
+
+        Logging = Settings.Logging,
+        SettingsVersion = 1,
+    }
+end
+
+--[[ -- Debugging
 Settings.Logging = { 
     ["Enabled"] = true,
     ["Effects"] = { }
 }
 -- ]]--
+
+Settings.WatchedEffects = {
+    [1] = {
+        -- { name = "Defiance", icon = 1091830177 },
+        { name = "Wall of Steel - Parry", icon = 1091471267 },
+    },
+    [2] = {
+        [1] = { name = "Persevere Gambit Chain - Step 1", icon = 1091469964 },
+        [2] = { name = "Finishing Blow - Persevere", icon = 1091830147 },
+    },
+    [3] = { { name = "Tier 1 Heal over Time", icon = 1091469960 } },
+    [4] = { { name = "Tier 2 Heal over Time", icon = 1091471259 } },
+    [5] = { { name = "Tier 4 Heal over Time", icon = 1091471247 } },
+    [6] = { { name = "Conviction", icon = 1091478183 } },
+    [7] = { { name = "Never Surrender", icon = 1091682153 } },
+    [8] = {
+        [1] = { name = "Tactically Sound Immunity", icon = 1090541176 },
+        [2] = { name = "Tactically Sound", icon = 1090541176 },
+        [3] = { name = "Temporary State Immunity", icon = 1091423618 },
+        [4] = { name = "Daze and Stun Immunity", icon = 1091423617 },
+        [5] = { name = "Recovering", icon = 1091466886 },
+        [6] = { name = "Stunned", icon = 1090552383 },
+        [7] = { name = "Knocked Down", icon = 1090552383 },
+        [8] = { name = "Dazed", icon = 1091404640 },
+    },
+}
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Effect slots: lookup table for effect display by name.
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+local watchslots = { }
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Watched effect display: To get label for showing remaining time at top
+-- of icon, we can't use EffectDisplay nor stretched icons. Sadly. Because
+-- of that, the whole window is stretched.
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+WatchSlot = class(Turbine.UI.Control)
+
+function WatchSlot:Constructor()
+    Turbine.UI.Control.Constructor(self)
+
+    self.effect = nil
+
+    self.slot = Turbine.UI.Control()
+    self.slot:SetBackColorBlendMode(1)
+
+    self.label = Turbine.UI.Label()
+    self.label:SetMouseVisible(false)
+    self.label:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleCenter );
+    self.label:SetFont(Turbine.UI.Lotro.Font.Verdana20);
+    self.label:SetFontStyle( Turbine.UI.FontStyle.Outline );
+    
+    self.slot:SetParent(self)
+    self.label:SetParent(self)
+end
+
+function WatchSlot:SetSize(w, h)
+    Turbine.UI.Control.SetSize(self, w, h)
+    self.label:SetSize(w, h)
+    self.slot:SetSize(w, h)
+end
+
+function WatchSlot:SetText(text)
+    self.label:SetText(text)
+end
+
+function WatchSlot:SetEffect(effect)
+    self.effect = effect
+    if effect ~= nil then
+        self.slot:SetBackground(self.effect:GetIcon())
+    end
+    self:SetVisible(effect ~= nil)
+end
+
+function WatchSlot:GetEffect()
+    return self.effect
+end
+
+function WatchSlot:Update(sender, args)
+    local remaining = self.effect:GetStartTime() + self.effect:GetDuration() - Turbine.Engine.GetGameTime()
+    if remaining < 10 then
+        self.label:SetText(string.format("%u", remaining + 1))
+    end
+end
+
+function WatchSlot:SetVisible(visible)
+    Turbine.UI.Control.SetVisible(self, visible)
+
+    if visible and self.effect:GetDuration() < 60 then
+        self:SetWantsUpdates(true)
+        self.label:SetText("...")
+    else
+        self:SetWantsUpdates(false)
+        self.label:SetText("X")
+    end
+end
+
+-- ****************************************************************************
+-- ****************************************************************************
+--
+-- Effect Watch Window: Watch window has specified number of slots to
+-- show effects, so that certain effects always appear at specific location
+-- in a screen. In future, we might have several different types of watch
+-- windows.
+--
+-- ****************************************************************************
+-- ****************************************************************************
+
+WatchWindow = class(Utils.UI.Window.Draggable)
+
+function WatchWindow:Constructor()
+    Utils.UI.Window.Draggable.Constructor(self);
+
+    -- ------------------------------------------------------------------------
+
+    self:SetText("BuffWatch");
+
+    -- ------------------------------------------------------------------------
+
+    local size = 24
+    local numSlots = #Settings.WatchedEffects
+    self.slots = watchslots
+
+    self:SetSize(36 * numSlots, 36)
+    self:SetStretchMode(1)
+
+    for col=1,numSlots do 
+
+        local background = Turbine.UI.Control()
+        background:SetParent(self)
+        background:SetPosition((34 + 2) * (col-1), 1)
+        background:SetSize(34, 34)
+        background:SetBackColor(Turbine.UI.Color(0.75, 0.15, 0.15, 0.15))
+        background:SetVisible(true)
+    
+        local effects = Settings.WatchedEffects[col]
+        for index=1, #effects do
+            local slot = WatchSlot(effects[index].icon)
+            slot:SetParent(self)
+            slot:SetPosition((34 + 2) * (col-1) + 1, 1)
+            slot:SetSize(32, 32)
+            slot:SetEffect(nil)
+            slot:SetVisible(false)
+            -- slot:SetText(tostring(col))
+
+            self.slots[effects[index].name] = slot
+        end
+    end
+    
+    -- ------------------------------------------------------------------------
+
+    self:Deserialize(Settings.WatchWindow)
+    self:SetSize(numSlots * size, size);
+    xDEBUG("%d x %d = %d x %d", numSlots*size, size, self:GetWidth(), self:GetHeight())
+end
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -106,39 +297,43 @@ end
 local LoggedNode = class(Turbine.UI.Control)
 
 function LoggedNode:Constructor(logged)
-	Turbine.UI.Control.Constructor(self);
+    Turbine.UI.Control.Constructor(self);
 
-	self.effect = logged
+    self.effect = logged
 
-	self:SetSize(200, 34)
+    self:SetSize(200, 34)
 
-	self.icon = Turbine.UI.Control()
-	self.icon:SetParent(self);
-	self.icon:SetBackground( self.effect.icon );
-	self.icon:SetSize(32, 32);
+    self.icon = Turbine.UI.Control()
+    self.icon:SetParent(self);
+    self.icon:SetBackground( self.effect.icon );
+    self.icon:SetSize(32, 32);
 
-	self.name = Turbine.UI.Label();
-	self.name:SetParent( self );
-	self.name:SetLeft(34 + 5);
-	self.name:SetSize( 200 - 34 - 5, 34 );
-	self.name:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
-	self.name:SetText( self.effect.name );
+    self.name = Turbine.UI.Label();
+    self.name:SetParent( self );
+    self.name:SetLeft(34 + 5);
+    self.name:SetSize( 200 - 34 - 5, 34 );
+    self.name:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
+    self.name:SetText( self.effect.name );
 end
 
 -- ----------------------------------------------------------------------------
 
-local LoggedListBox = class(utils.ScrolledListBox)
+local LoggedListBox = class(Utils.UI.ScrolledListBox)
 
 function LoggedListBox:AddLogged(logged)
-    DEBUG(string.format("Logged: %s", logged.name))
+    xDEBUG(string.format("Logged: %s", logged.name))
     self:AddItem(LoggedNode(logged))
 end
 
 function LoggedListBox:Constructor()
-    utils.ScrolledListBox.Constructor(self)
+    Utils.UI.ScrolledListBox.Constructor(self)
     
-    for k, v in pairs(Settings.Logging.Effects) do
-        self:AddLogged(v)
+    for _, buff in pairs(Settings.Logging.Effects) do
+        for _, category in pairs(buff) do
+            for _, effect in pairs(category) do
+                self:AddLogged(effect)
+            end
+        end
     end
 end
 
@@ -154,49 +349,70 @@ local loggedlist = LoggedListBox()
 -- ****************************************************************************
 -- ****************************************************************************
 
+function isLogged(effect)
+    local log = Settings.Logging.Effects
+
+    if log[effect:IsDebuff()] == nil then
+        log[effect:IsDebuff()] = {}
+    end
+    if log[effect:IsDebuff()][effect:GetCategory()] == nil then
+        log[effect:IsDebuff()][effect:GetCategory()] = {}
+    end
+    
+    return Settings.Logging.Effects[effect:IsDebuff()][effect:GetCategory()][effect:GetName()] ~= nil
+end
+
 function checkIfLogged(effect)
-	if Settings.Logging.Enabled and Settings.Logging.Effects[name] == nil then
+
+    if Settings.Logging.Enabled and not isLogged(effect) then
         local logged = LoggedEffect(effect)
-        Settings.Logging.Effects[logged.name] = logged
+        Settings.Logging.Effects[logged.isDebuff][logged.category][logged.name] = logged
         loggedlist:AddLogged(logged)
         DEBUG(string.format("Logged: %s", effect:GetName()))
     end
 end
 
 local function EffectAdded(effect)
-	xDEBUG(string.format("Added [%s]: %s", tostring(effect), effect:GetName()))
-	xDEBUG(string.format("%s", effect:GetID()))
-	xDEBUG(string.format("%s", effect:GetDescription()))
-	xDEBUG(string.format("%s", effect:GetCategory()))
+    local name = effect:GetName()
+
+    xDEBUG(string.format("Added [%s]: %s", tostring(effect), name))
+    xDEBUG(string.format("%s", effect:GetID()))
+    xDEBUG(string.format("%s", effect:GetDescription()))
+    xDEBUG(string.format("%s", effect:GetCategory()))
 
     checkIfLogged(effect)
+
+    local slot = watchslots[name];
+    if slot ~= nil then
+        xDEBUG("Slot %s: added %s", tostring(slot), name)
+        slot:SetEffect(effect)
+    end
 end
 
 -- ----------------------------------------------------------------------------
 
 local function EffectRemoved(effect)
-	DEBUG(string.format("Removed [%s]: %s", tostring(effect), effect:GetName()))
+    local name = effect:GetName()
+    
+    xDEBUG(string.format("Removed [%s]: %s", tostring(effect), name))
+
+    local slot = watchslots[name];
+    if slot ~= nil then
+        xDEBUG("Slot %s: removed %s", tostring(slot), name)
+        if slot:GetEffect() == effect then
+            slot:SetEffect(nil)
+        end
+    end
 end
 
 -- ----------------------------------------------------------------------------
 
 local function RefreshEffects()
-	for i = 1, effects:GetCount() do
-	    EffectAdded(effects:Get(i))
-		effect = effects:Get(i)
-	end
+    for i = 1, effects:GetCount() do
+        EffectAdded(effects:Get(i))
+        effect = effects:Get(i)
+    end
 end
-
--- ****************************************************************************
--- ****************************************************************************
---
--- Effect Watch Window: Watch window has specified number of slots to
--- show effects, so that certain effects always appear at specific location
--- in a screen. In future, we might have several different types of watch
--- windows.
---
--- ****************************************************************************
--- ****************************************************************************
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -209,55 +425,45 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Window to browse tracked effects
+-- Window to browse logged effects
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-LogBrowser = class(Turbine.UI.Lotro.Window);
+-- ----------------------------------------------------------------------------
+
+LogBrowser = class(Utils.UI.Window);
 
 function LogBrowser:Constructor()
-	Turbine.UI.Lotro.Window.Constructor(self);
+    Utils.UI.Window.Constructor(self);
 
-	-- ------------------------------------------------------------------------
-	-- Window properties
-	-- ------------------------------------------------------------------------
-	
-	self:SetText("BuffWatch");
-	
-	-- self:SetMinimumWidth(310);
-	-- self:SetMaximumWidth(310);
-	-- self:SetMinimumHeight(250);
-	
-	-- ------------------------------------------------------------------------
+    self.watchwnd = WatchWindow()
 
-	loggedlist:SetParent(self)
+    -- ------------------------------------------------------------------------
+    -- Window properties
+    -- ------------------------------------------------------------------------
+    
+    self:SetText("Logged Effects");
 
-	-- ------------------------------------------------------------------------
+    -- self:SetMinimumWidth(310);
+    -- self:SetMaximumWidth(310);
+    -- self:SetMinimumHeight(250);
+    
+    -- ------------------------------------------------------------------------
 
-	self:SetPosition(
-		Settings.WatchWindowPosition.Left,
-		Settings.WatchWindowPosition.Top
-	)
-	self:SetSize(
-		310, -- Settings.WindowPosition.Width,
-		Settings.WatchWindowPosition.Height
-	)
-	
-	self:SetResizable(true);
+    loggedlist:SetParent(self)
 
-	-- ------------------------------------------------------------------------
+    -- ------------------------------------------------------------------------
 
-	RefreshEffects();
+    self:SetResizable(true);
 
-	-- ------------------------------------------------------------------------
+    -- ------------------------------------------------------------------------
 
-	self:SetVisible(Settings.WindowVisible);
-	-- self:SetVisible(true);
-end
+    RefreshEffects();
 
-function LogBrowser:VisibleChanged(sender, args)
-	-- Settings.WindowVisible = self:IsVisible()
+    -- ------------------------------------------------------------------------
+
+    self:Deserialize(Settings.LogWindow)
 end
 
 -- ----------------------------------------------------------------------------
@@ -265,8 +471,8 @@ end
 -- ----------------------------------------------------------------------------
 
 function LogBrowser:SizeChanged(sender, args)
-	loggedlist:SetPosition(20, 40);
-	loggedlist:SetSize(self:GetWidth()-40, self:GetHeight()-80);
+    loggedlist:SetPosition(20, 40);
+    loggedlist:SetSize(self:GetWidth()-40, self:GetHeight()-80);
 end
 
 -- ----------------------------------------------------------------------------
@@ -275,26 +481,18 @@ end
 
 function LogBrowser:Unload()
 
-	-- ------------------------------------------------------------------------
-	-- Store window position & size
-	-- ------------------------------------------------------------------------
+    -- ------------------------------------------------------------------------
+    -- Store window position & size
+    -- ------------------------------------------------------------------------
 
-	Settings.WatchWindowPosition.Left = self:GetLeft();
-	Settings.WatchWindowPosition.Top = self:GetTop();
-	Settings.WatchWindowPosition.Height = self:GetHeight();
-	Settings.WatchWindowPosition.Width = self:GetWidth();	
-	-- Settings.WindowVisible = self:IsVisible();
+    Settings.LogWindow = self:Serialize()
+    Settings.WatchWindow = self.watchwnd:Serialize()
 
-	-- ------------------------------------------------------------------------
-	-- Save settings
-	-- ------------------------------------------------------------------------
+    -- ------------------------------------------------------------------------
+    -- Save settings
+    -- ------------------------------------------------------------------------
 
-	Turbine.PluginData.Save(
-		Turbine.DataScope.Character,
-		"BuffWatchSettings",
-		Settings
-	)
-	self:SetVisible( false );
+    PlugIn:SaveSettings("BuffWatchSettings", Settings)
 end
 
 -- ----------------------------------------------------------------------------
@@ -302,7 +500,7 @@ end
 -- ----------------------------------------------------------------------------
 
 local mainwnd = LogBrowser()
-_plugin:atexit(function() mainwnd:Unload() end)
+atexit(function() mainwnd:Unload() end)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -312,9 +510,9 @@ _plugin:atexit(function() mainwnd:Unload() end)
 -- ****************************************************************************
 -- ****************************************************************************
 
-local myCMD = Turbine.ShellCommand();
+local _cmd = Turbine.ShellCommand();
 
-function myCMD:Execute(cmd, args)
+function _cmd:Execute(cmd, args)
 	if ( args == "show" ) then
 		mainwnd:SetVisible( true );
 		-- mainwnd:Refresh()
@@ -328,10 +526,9 @@ function myCMD:Execute(cmd, args)
 	end
 end
 
-Turbine.Shell.AddCommand( "buffwatch", myCMD );
-_plugin:atexit(function() Turbine.Shell.RemoveCommand(myCMD) end)
-
-INFO("/buffwatch [show | hide | toggle]" )
+Turbine.Shell.AddCommand( "buffwatch", _cmd)
+_cmd:Execute("buffwatch")
+atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -341,27 +538,12 @@ INFO("/buffwatch [show | hide | toggle]" )
 -- ****************************************************************************
 -- ****************************************************************************
 
-local _hooks = {
+local hooks = HookTable({
 	{ object = effects, event = "EffectAdded", callback = function(sender, args) EffectAdded(effects:Get(args.Index)) end },
 	{ object = effects, event = "EffectRemoved", callback = function(sender, args) EffectRemoved(args.Effect) end },
 	{ object = effects, event = "EffectCleared", callback = function(sender, args) EffectRemoved(args.Effect) end },
-}
+})
 
-function InstallHooks()
-	for i = 1, table.getn(_hooks) do
-		if _hooks[i].object ~= nil then
-			utils.AddCallback(_hooks[i].object, _hooks[i].event, _hooks[i].callback)
-		end
-	end
-end
+hooks:Install()
+atexit(function() hooks:Uninstall() end)
 
-function UninstallHooks()
-	for i = 1, table.getn(_hooks) do
-		if _hooks[i].object ~= nil then
-			utils.RemoveCallback(_hooks[i].object, _hooks[i].event, _hooks[i].callback)
-		end
-	end
-end
-
-InstallHooks()
-_plugin:atexit(UninstallHooks)

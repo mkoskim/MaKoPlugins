@@ -86,6 +86,7 @@ function TargetWidget:SetTarget(entity)
         self.label:SetText("- - -")
     end
     self.entity:SetEntity(entity)
+    DEBUG("Entity: %s", tostring(entity))
 end
 
 -- ****************************************************************************

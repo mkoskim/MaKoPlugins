@@ -103,25 +103,25 @@ local function LoadDragBar()
 end
 
 if pcall(LoadDragBar) then
-    Window.Draggable = class(Turbine.UI.Window.Undecorated)
+    Window.Draggable = class(Window.Undecorated)
 
     function Window.Draggable:Constructor()
-        Turbine.UI.Window.Constructor(self)
+        Window.Undecorated.Constructor(self)
         self.dragbar = WindowDragBar(self)
     end
 
     function Window.Draggable:SetText(text)
-        Turbine.UI.Window.SetText(self, text)
+        Window.Undecorated.SetText(self, text)
         if self.dragbar then self.dragbar.Label:SetText(text) end
     end
 
     function Window.Draggable:SetSize(w, h)
-        Turbine.UI.Window.SetSize(self, w, h)
+        Window.Undecorated.SetSize(self, w, h)
         if self.dragbar then self.dragbar:RecalculateSize() end
     end
 
     function Window.Draggable:SetPosition(x, y)
-        Turbine.UI.Window.SetPosition(self, x, y)
+        Window.Undecorated.SetPosition(self, x, y)
         if self.dragbar then self.dragbar:RecalculatePosition() end
     end
 
