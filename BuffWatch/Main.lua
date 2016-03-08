@@ -11,16 +11,23 @@
 debugging = true
 
 -- ****************************************************************************
-
+--
 -- Idea:
 --
 -- - Have certain amounts of slots at screen
 -- - Assign effects (buffs, debuffs) to each slot
 -- - Maintain a database for effects, to be chosen to slots
 --
+-- ----------------------------------------------------------------------------
+--
 -- TODO:
 -- - Slot editor
 -- - GetSize() reports the original size, not stretched size
+-- - Add Garan's debug interface when available
+-- - Logs to separate, account-wide file: including defaults coming with
+--   plugin
+--
+-- ----------------------------------------------------------------------------
 --
 -- DONE:
 -- - DONE: Whole WatchWindow is stretched to get icons resized with text at top
@@ -33,6 +40,8 @@ import "MaKoPlugins.BuffWatch.Bindings"
 -- ****************************************************************************
 
 xDEBUG("Loading...");
+
+import "MaKoPlugins.BuffWatch.Watch"
 
 -- ----------------------------------------------------------------------------
 -- Obtain & extending player info, ready for using
@@ -129,87 +138,6 @@ Settings.WatchedEffects = {
         [8] = { name = "Dazed", icon = 1091404640 },
     },
 }
-
--- ****************************************************************************
--- ****************************************************************************
---
--- Effect slots: lookup table for effect display by name.
---
--- ****************************************************************************
--- ****************************************************************************
-
-local watchslots = { }
-
--- ****************************************************************************
--- ****************************************************************************
---
--- Watched effect display: To get label for showing remaining time at top
--- of icon, we can't use EffectDisplay nor stretched icons. Sadly. Because
--- of that, the whole window is stretched.
---
--- ****************************************************************************
--- ****************************************************************************
-
-WatchSlot = class(Turbine.UI.Control)
-
-function WatchSlot:Constructor()
-    Turbine.UI.Control.Constructor(self)
-
-    self.effect = nil
-
-    self.slot = Turbine.UI.Control()
-    self.slot:SetBackColorBlendMode(1)
-
-    self.label = Turbine.UI.Label()
-    self.label:SetMouseVisible(false)
-    self.label:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleCenter );
-    self.label:SetFont(Turbine.UI.Lotro.Font.Verdana20);
-    self.label:SetFontStyle( Turbine.UI.FontStyle.Outline );
-    
-    self.slot:SetParent(self)
-    self.label:SetParent(self)
-end
-
-function WatchSlot:SetSize(w, h)
-    Turbine.UI.Control.SetSize(self, w, h)
-    self.label:SetSize(w, h)
-    self.slot:SetSize(w, h)
-end
-
-function WatchSlot:SetText(text)
-    self.label:SetText(text)
-end
-
-function WatchSlot:SetEffect(effect)
-    self.effect = effect
-    if effect ~= nil then
-        self.slot:SetBackground(self.effect:GetIcon())
-    end
-    self:SetVisible(effect ~= nil)
-end
-
-function WatchSlot:GetEffect()
-    return self.effect
-end
-
-function WatchSlot:Update(sender, args)
-    local remaining = self.effect:GetStartTime() + self.effect:GetDuration() - Turbine.Engine.GetGameTime()
-    if remaining < 10 then
-        self.label:SetText(string.format("%u", remaining + 1))
-    end
-end
-
-function WatchSlot:SetVisible(visible)
-    Turbine.UI.Control.SetVisible(self, visible)
-
-    if visible and self.effect:GetDuration() < 60 then
-        self:SetWantsUpdates(true)
-        self.label:SetText("...")
-    else
-        self:SetWantsUpdates(false)
-        self.label:SetText("X")
-    end
-end
 
 -- ****************************************************************************
 -- ****************************************************************************
