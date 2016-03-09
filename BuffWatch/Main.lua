@@ -114,28 +114,28 @@ Settings.Logging = {
 -- ]]--
 
 Settings.WatchedEffects = {
-    [1] = {
+    {
         -- { name = "Defiance", icon = 1091830177 },
         { name = "Wall of Steel - Parry", icon = 1091471267 },
     },
-    [2] = {
-        [1] = { name = "Persevere Gambit Chain - Step 1", icon = 1091469964 },
-        [2] = { name = "Finishing Blow - Persevere", icon = 1091830147 },
+    {
+        { name = "Persevere Gambit Chain - Step 1", icon = 1091469964 },
+        { name = "Finishing Blow - Persevere", icon = 1091830147 },
     },
-    [3] = { { name = "Tier 1 Heal over Time", icon = 1091469960 } },
-    [4] = { { name = "Tier 2 Heal over Time", icon = 1091471259 } },
-    [5] = { { name = "Tier 4 Heal over Time", icon = 1091471247 } },
-    [6] = { { name = "Conviction", icon = 1091478183 } },
-    [7] = { { name = "Never Surrender", icon = 1091682153 } },
-    [8] = {
-        [1] = { name = "Tactically Sound Immunity", icon = 1090541176 },
-        [2] = { name = "Tactically Sound", icon = 1090541176 },
-        [3] = { name = "Temporary State Immunity", icon = 1091423618 },
-        [4] = { name = "Daze and Stun Immunity", icon = 1091423617 },
-        [5] = { name = "Recovering", icon = 1091466886 },
-        [6] = { name = "Stunned", icon = 1090552383 },
-        [7] = { name = "Knocked Down", icon = 1090552383 },
-        [8] = { name = "Dazed", icon = 1091404640 },
+    { },
+    { { name = "Tier 2 Heal over Time", icon = 1091471259 } },
+    { { name = "Tier 4 Heal over Time", icon = 1091471247 } },
+    { { name = "Conviction", icon = 1091478183 } },
+    { { name = "Never Surrender", icon = 1091682153 } },
+    {
+        { name = "Tactically Sound Immunity", icon = 1090541176 },
+        { name = "Tactically Sound", icon = 1090541176 },
+        { name = "Temporary State Immunity", icon = 1091423618 },
+        { name = "Daze and Stun Immunity", icon = 1091423617 },
+        { name = "Recovering", icon = 1091466886 },
+        { name = "Stunned", icon = 1090552383 },
+        { name = "Knocked Down", icon = 1090552383 },
+        { name = "Dazed", icon = 1091404640 },
     },
 }
 
