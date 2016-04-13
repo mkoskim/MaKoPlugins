@@ -246,13 +246,20 @@ Stat("TactMast", function() return attr:GetTacticalDamage() end, "Mastery")
 Stat("Resistance", function() return attr:GetBaseResistance() end, "Resistance")
 Stat("CritDef", function() return attr:GetBaseCriticalHitAvoidance() end, "CritDef")
 
--- Stat("HealOut", function() return attr:GetOutgoingHealing() end, "OutHeals")
 Stat("HealOut", function() return ToPercent("OutHeals", attr:GetOutgoingHealing(), player:GetLevel()) end, nil, FormatPercentageInc)
 Stat("HealIn", function() return attr:GetIncomingHealing() end, "IncHeals")
 
 Stat("Block", function() return (attr:CanBlock() and attr:GetBlock()) or 0 end, "Avoidances")
 Stat("Parry", function() return (attr:CanParry() and attr:GetParry()) or 0 end, "Avoidances")
 Stat("Evade", function() return (attr:CanEvade() and attr:GetEvade()) or 0 end, "Avoidances")
+
+Stat("PartialBlock", function() return ToPercent("Partials", stats["Block"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialParry", function() return ToPercent("Partials", stats["Parry"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialEvade", function() return ToPercent("Partials", stats["Evade"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
+
+Stat("PartialBlockMit", function() return ToPercent("PartialMit", stats["Block"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialParryMit", function() return ToPercent("PartialMit", stats["Parry"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialEvadeMit", function() return ToPercent("PartialMit", stats["Evade"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
 
 Stat("CommonMit", function() return attr:GetCommonMitigation() end, armortype)
 Stat("PhysMit", function() return attr:GetPhysicalMitigation() end, armortype)
@@ -272,6 +279,26 @@ Stat("Avoidances", function()
 	FormatPercentage
 )
 
+Stat("Partials", function()
+	return
+		stats["PartialBlock"]:Rating() + 
+		stats["PartialParry"]:Rating() +
+		stats["PartialEvade"]:Rating();
+	end,
+	nil,
+	FormatPercentage
+)
+
+Stat("AvoidChance", function()
+	return
+	    100.0 - 100.0 * 
+	    (1.0 - stats["Avoidances"]:Rating()/100.0) *
+	    (1.0 - stats["Partials"]:Rating() / 100.0)
+	end,
+	nil,
+	FormatPercentage
+)
+
 --[[
 Stat("SelfHeal", function()
 	return 100 *
@@ -280,6 +307,13 @@ Stat("SelfHeal", function()
 	end,
 	nil,
 	FormatPercentageInc
+)
+
+Stat("EffectiveMoralePhys", function()
+    return stats["Morale"] *
+		(1 - stats["CommonMit"]:Percentage()/100.0)
+    end,
+    nil
 )
 
 Stat("CommonELM", function()
@@ -891,6 +925,24 @@ function BrowseWindow:Constructor()
 				StatNode("Evade"),
 				StatSep(),
 				StatNode("", "Avoidances"),
+				StatSep(),
+				StatNode("Partial Block", "PartialBlock"),
+				StatNode("Partial Parry", "PartialParry"),
+				StatNode("Partial Evade", "PartialEvade"),
+				StatSep(),
+				StatNode("", "Partials"),
+				StatSep(),
+				StatNode("Avoid Chance", "AvoidChance"),
+			}
+		)
+	);
+	
+	nodes:Add(
+		StatGroup( "Partial Mitigations",
+			{
+				StatNode("Partial Block", "PartialBlockMit"),
+				StatNode("Partial Parry", "PartialParryMit"),
+				StatNode("Partial Evade", "PartialEvadeMit"),
 			}
 		)
 	);
@@ -910,8 +962,8 @@ function BrowseWindow:Constructor()
 			{
 				StatNode("Self-heal", "SelfHeal"),
 				StatSep(),
-				StatNode("Morale Mult.", ""),
-				StatNode("- Common Damage", "CommonELM"),
+				StatNode("Effective Morale", ""),
+				StatNode("- Common Damage", "EffectiveMoraleCommon"),
 				StatNode("- Tactical Damage", "TactELM"),
 			}
 		)
