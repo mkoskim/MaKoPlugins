@@ -43,13 +43,13 @@ local function r2p_segment(R, L, segments)
 	local RL = R/L
 	local p = 0
 	for key, segment in ipairs(segments) do
-	    if segment.level and L < segment.level then break end
 		if segment.dRL == nil or segment.dRL > RL then
 			return p + r2p(segment.K, RL)
 		else
 			p = p + segment.dP
 			RL = RL - segment.dRL
 		end
+	    if segment.level and L < segment.level then break end
 	end
 	return p
 end
