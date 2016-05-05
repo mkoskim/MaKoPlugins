@@ -23,7 +23,7 @@ import "MaKoPlugins.Utils";
 -- ----------------------------------------------------------------------------
 
 local function r2p(K, RL)
-	return 100 * (1 / (1 + K/RL))
+	if K ~= nil then return 100 * (1 / (1 + K/RL)) else return 0 end
 	end
 
 -- ----------------------------------------------------------------------------
@@ -126,6 +126,21 @@ local segments = {
 		Segment(10, 5697/38, 633/38),
 		Segment(50, 5697/38, 5697/38)
 	},
+	["LightArmorT2"] = {
+		Segment(0, nil, 67.5),
+		Segment(20, 150, 37.5),
+		Segment(20, 350, 87.5)
+	},
+	["MediumArmorT2"] = {
+		Segment(0, nil, 67.5),
+		Segment(20, 149.9175, 59967/1600.0),
+		Segment(30,	253.003, 759009/7000.0)
+	},
+	["HeavyArmorT2"] = {
+		Segment(0, nil, 67.5),
+		Segment(10, 5697/38, 633/38),
+		Segment(50, 5697/38, 5697/38)
+	},
 }
 
 local linears = {
@@ -158,9 +173,9 @@ local hascap = Set{
 	"Avoidances",
 	"Partials",
 	"PartialMit",
-	"LightArmor",
-	"MediumArmor",
-	"HeavyArmor",
+	"LightArmor", "LightArmorT2",
+	"MediumArmor", "MediumArmorT2",
+	"HeavyArmor", "HeavyArmorT2",
 	"Mastery",
 }
 

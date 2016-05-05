@@ -265,6 +265,10 @@ Stat("CommonMit", function() return attr:GetCommonMitigation() end, armortype)
 Stat("PhysMit", function() return attr:GetPhysicalMitigation() end, armortype)
 Stat("TactMit", function() return attr:GetTacticalMitigation() end, armortype)
 
+Stat("CommonMitT2", function() return attr:GetCommonMitigation() end, armortype .. "T2")
+Stat("PhysMitT2", function() return attr:GetPhysicalMitigation() end, armortype .. "T2")
+Stat("TactMitT2", function() return attr:GetTacticalMitigation() end, armortype .. "T2")
+
 -- ----------------------------------------------------------------------------
 -- Calculated stats
 -- ----------------------------------------------------------------------------
@@ -411,14 +415,16 @@ function StatShareWindow:Constructor()
         ["Offence"] = StatShareGroup("Offence"),
         ["Defence"] = StatShareGroup("Defence"),
         ["Avoidance"] = StatShareGroup("Avoidance"),
-        ["Mitigations"] = StatShareGroup("Mitigations"),
+        ["Mitigations (T1)"] = StatShareGroup("Mitigations (T1)"),
+        ["Mitigations (T2)"] = StatShareGroup("Mitigations (T2)"),
     }
 
     self.order = {
         "MoralePower", "Regen",
         "BasicStats",
         "Offence",
-        "Defence", "Avoidance", "Mitigations"
+        "Defence", "Avoidance",
+        "Mitigations (T1)", "Mitigations (T2)",
     }
 
     for _, key in pairs(self.order) do
@@ -618,11 +624,18 @@ function StatShareWindow:Refresh()
         string.format("Evade: %s - %s",
             stats["Evade"]:RatingAsString(),
             stats["Evade"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("BPE...: %s", stats["Avoidances"]:RatingAsString())
+        )
+        .. "\n\n" ..
+        string.format("BPE (Full): %s", stats["Avoidances"]:RatingAsString())
+        .. "\n" ..
+        string.format("BPE (Partial): %s", stats["Partials"]:RatingAsString())
+        .. "\n" ..
+        string.format("Avoid Chance: %s",
+            stats["AvoidChance"]:RatingAsString()
+        )
     )
 
-    self.groups["Mitigations"]:SetText(
+    self.groups["Mitigations (T1)"]:SetText(
         string.format("Phys. Mitigation..: %s - %s",
             stats["CommonMit"]:RatingAsString(),
             stats["CommonMit"]:PercentAsString()
@@ -634,6 +647,21 @@ function StatShareWindow:Refresh()
         string.format("OC/FW Mitigation: %s - %s",
             stats["PhysMit"]:RatingAsString(),
             stats["PhysMit"]:PercentAsString()
+        )
+    )
+
+    self.groups["Mitigations (T2)"]:SetText(
+        string.format("T2 Phys. Mit..: %s - %s",
+            stats["CommonMitT2"]:RatingAsString(),
+            stats["CommonMitT2"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("T2 Tact. Mit..: %s - %s",
+            stats["TactMitT2"]:RatingAsString(),
+            stats["TactMitT2"]:PercentAsString()
+        ) .. "\n" ..
+        string.format("T2 OC/FW Mit: %s - %s",
+            stats["PhysMitT2"]:RatingAsString(),
+            stats["PhysMitT2"]:PercentAsString()
         )
     )
 end
@@ -948,11 +976,21 @@ function BrowseWindow:Constructor()
 	);
 	
 	nodes:Add(
-		StatGroup( "Mitigations",
+		StatGroup( "Mitigations (T1)",
 			{
 				StatNode("Common", "CommonMit"),
 				StatNode("Tactical", "TactMit"),
 				StatNode("OC/FW", "PhysMit"),
+			}
+		)
+	);
+
+	nodes:Add(
+		StatGroup( "Mitigations (T2)",
+			{
+				StatNode("Common", "CommonMitT2"),
+				StatNode("Tactical", "TactMitT2"),
+				StatNode("OC/FW", "PhysMitT2"),
 			}
 		)
 	);
