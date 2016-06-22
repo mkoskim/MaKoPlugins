@@ -35,7 +35,7 @@ local armortype = ArmorType[player:GetClass()]
 -- ****************************************************************************
 
 local DefaultSettings = {
-    SettingsVersion = 2,
+    SettingsVersion = 3,
 
     ExpandedGroups = { },
     ShowPercentages = true,
@@ -56,6 +56,20 @@ local DefaultSettings = {
         Toggle = {
             Left = 230, Top = 0, Visible = true
         }
+    },
+    
+    Modifiers = {
+        Active = "T1",
+        T1 = { },
+        T2 = {
+            Block = function(L) return -40 * L end,
+            Parry = function(L) return -40 * L end,
+            Evade = function(L) return -40 * L end,
+            Resistance = function(L) return -90 * L end,
+            CommonMit = function(L) return -5 * math.floor(L * 13.5) end,
+            TactMit = function(L) return -5 * math.floor(L * 13.5) end,
+            PhysMit = function(L) return -5 * math.floor(L * 13.5) end,
+        },
     }
 }
 
@@ -87,6 +101,13 @@ if Settings["SettingsVersion"] == 1 then
     Settings.ShareWindow.Toggle = DefaultSettings.ShareWindow.Toggle
     Settings.SettingsVersion = 2
 end
+
+if Settings["SettingsVersion"] == 2 then
+    Settings.Modifiers = DefaultSettings.Modifiers
+    Settings.SettingsVersion = 3
+end
+
+Settings.Modifiers.T2 = DefaultSettings.Modifiers.T2
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -147,10 +168,29 @@ end
 
 -- ----------------------------------------------------------------------------
 
-function Stat:Rating() return self.rawvalue() end
+function Stat:Modifier()
+    local mod = Settings.Modifiers[Settings.Modifiers.Active][self.key]
+    if mod == nil then return 0 end
+    return mod(player:GetLevel())
+end
+
+function Stat:Rating()
+    return self.rawvalue()
+end
+
+function Stat:ModRating()
+    return math.max(self:Rating() + self:Modifier(), 0)
+end
+
+function Stat:RatingCap()
+    local cap = ratingCap(self.percentage, player:GetLevel())
+    if cap == nil then return nil end
+    return math.max(cap - self:Modifier(), 0)
+end
+
 function Stat:Percentage()
-    return ToPercent( self.percentage, self:Rating(), player:GetLevel() )
-    end
+    return ToPercent(self.percentage, self:ModRating(), player:GetLevel())
+end
 
 function Stat:RatingAsString()
     return self.fmt( self:Rating() )
@@ -164,10 +204,8 @@ function Stat:AsString()
 	if type(self.rawvalue) == "string" then
 		return self.rawvalue
 	elseif percentages and self.percentage then
-		-- return FormatPercentage(self:AsPercent())
 		return self:PercentAsString()
 	else
-		-- return self.fmt( self:Value() )
 		return self:RatingAsString()
 	end
 end
@@ -195,7 +233,7 @@ end
 
 function Stat:SetCapRef()
 	if type(self.rawvalue) ~= "string" then
-		self.refvalue = ratingCap(self.percentage, player:GetLevel())
+		self.refvalue = self:RatingCap()
 	end
 end
 
@@ -253,21 +291,17 @@ Stat("Block", function() return (attr:CanBlock() and attr:GetBlock()) or 0 end, 
 Stat("Parry", function() return (attr:CanParry() and attr:GetParry()) or 0 end, "Avoidances")
 Stat("Evade", function() return (attr:CanEvade() and attr:GetEvade()) or 0 end, "Avoidances")
 
-Stat("PartialBlock", function() return ToPercent("Partials", stats["Block"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialParry", function() return ToPercent("Partials", stats["Parry"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialEvade", function() return ToPercent("Partials", stats["Evade"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialBlock", function() return ToPercent("Partials", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialParry", function() return ToPercent("Partials", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialEvade", function() return ToPercent("Partials", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
 
-Stat("PartialBlockMit", function() return ToPercent("PartialMit", stats["Block"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialParryMit", function() return ToPercent("PartialMit", stats["Parry"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialEvadeMit", function() return ToPercent("PartialMit", stats["Evade"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialBlockMit", function() return ToPercent("PartialMit", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialParryMit", function() return ToPercent("PartialMit", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialEvadeMit", function() return ToPercent("PartialMit", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
 
 Stat("CommonMit", function() return attr:GetCommonMitigation() end, armortype)
 Stat("PhysMit", function() return attr:GetPhysicalMitigation() end, armortype)
 Stat("TactMit", function() return attr:GetTacticalMitigation() end, armortype)
-
-Stat("CommonMitT2", function() return attr:GetCommonMitigation() end, armortype .. "T2")
-Stat("PhysMitT2", function() return attr:GetPhysicalMitigation() end, armortype .. "T2")
-Stat("TactMitT2", function() return attr:GetTacticalMitigation() end, armortype .. "T2")
 
 -- ----------------------------------------------------------------------------
 -- Calculated stats
@@ -415,8 +449,7 @@ function StatShareWindow:Constructor()
         ["Offence"] = StatShareGroup("Offence"),
         ["Defence"] = StatShareGroup("Defence"),
         ["Avoidance"] = StatShareGroup("Avoidance"),
-        ["Mitigations (T1)"] = StatShareGroup("Mitigations (T1)"),
-        ["Mitigations (T2)"] = StatShareGroup("Mitigations (T2)"),
+        ["Mitigations"] = StatShareGroup("Mitigations"),
     }
 
     self.order = {
@@ -424,7 +457,7 @@ function StatShareWindow:Constructor()
         "BasicStats",
         "Offence",
         "Defence", "Avoidance",
-        "Mitigations (T1)", "Mitigations (T2)",
+        "Mitigations",
     }
 
     for _, key in pairs(self.order) do
@@ -635,7 +668,7 @@ function StatShareWindow:Refresh()
         )
     )
 
-    self.groups["Mitigations (T1)"]:SetText(
+    self.groups["Mitigations"]:SetText(
         string.format("Phys. Mitigation..: %s - %s",
             stats["CommonMit"]:RatingAsString(),
             stats["CommonMit"]:PercentAsString()
@@ -647,21 +680,6 @@ function StatShareWindow:Refresh()
         string.format("OC/FW Mitigation: %s - %s",
             stats["PhysMit"]:RatingAsString(),
             stats["PhysMit"]:PercentAsString()
-        )
-    )
-
-    self.groups["Mitigations (T2)"]:SetText(
-        string.format("T2 Phys. Mit..: %s - %s",
-            stats["CommonMitT2"]:RatingAsString(),
-            stats["CommonMitT2"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("T2 Tact. Mit..: %s - %s",
-            stats["TactMitT2"]:RatingAsString(),
-            stats["TactMitT2"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("T2 OC/FW Mit: %s - %s",
-            stats["PhysMitT2"]:RatingAsString(),
-            stats["PhysMitT2"]:PercentAsString()
         )
     )
 end
@@ -828,6 +846,7 @@ function BrowseWindow:Constructor()
 
     self.sharewindow = StatShareWindow()
 
+--[[
     self.sharebtn = Turbine.UI.Lotro.Button();
     self.sharebtn:SetParent(self)
 	self.sharebtn:SetText( "Share" );
@@ -836,6 +855,7 @@ function BrowseWindow:Constructor()
         -- if exposing then self.sharewindow:Refresh() end
         self.sharewindow:SetVisible(exposing)
     end
+]]--
 
 	-- ------------------------------------------------------------------------
 	-- Buttons
@@ -845,6 +865,20 @@ function BrowseWindow:Constructor()
 	self.refreshbtn:SetParent( self );
 	self.refreshbtn:SetText( "Refresh" );
 	self.refreshbtn.Click = function() 
+		self:Refresh();
+		if self.sharewindow:IsVisible() then
+		    self.sharewindow:Refresh()
+		end
+	end
+
+	self.modbtn = Utils.UI.DropDown({"T1", "T2"});
+	self.modbtn:SetParent( self );
+	self.modbtn:SetText(Settings.Modifiers.Active);
+	self.modbtn.ItemChanged = function(sender, args) 
+		Settings.Modifiers.Active = self.modbtn:GetText()
+		if self.referencebtn:GetText() == "Cap" then
+		    SetCapReference()
+		end
 		self:Refresh();
 		if self.sharewindow:IsVisible() then
 		    self.sharewindow:Refresh()
@@ -976,21 +1010,11 @@ function BrowseWindow:Constructor()
 	);
 	
 	nodes:Add(
-		StatGroup( "Mitigations (T1)",
+		StatGroup( "Mitigations",
 			{
 				StatNode("Common", "CommonMit"),
 				StatNode("Tactical", "TactMit"),
 				StatNode("OC/FW", "PhysMit"),
-			}
-		)
-	);
-
-	nodes:Add(
-		StatGroup( "Mitigations (T2)",
-			{
-				StatNode("Common", "CommonMitT2"),
-				StatNode("Tactical", "TactMitT2"),
-				StatNode("OC/FW", "PhysMitT2"),
 			}
 		)
 	);
@@ -1053,21 +1077,19 @@ function BrowseWindow:SizeChanged( sender, args )
 		self:GetHeight() - 32
 	);
 
-	if self["sharebtn"] ~= nil then
-	    self.sharebtn:SetSize(60, 20);
-	    self.sharebtn:SetPosition(
-		    30 + 65,
-		    self:GetHeight() - 32
-	    );
-    end
-
+	self.modbtn:SetWidth(60);
+	self.modbtn:SetPosition(
+	    30 + 65,
+	    self:GetHeight() - 32
+	);
+    
 	self.referencebtn:SetWidth(60);
 	self.referencebtn:SetPosition(
 		40 + 120,
 		self:GetHeight() - 32
 	);
 
-	self.formatbtn:SetWidth( 60 );
+	self.formatbtn:SetWidth(60);
 	self.formatbtn:SetPosition(
 		40 + 180,
 		self:GetHeight() - 32
@@ -1115,6 +1137,8 @@ function BrowseWindow:Unload()
 
 	Settings.ShowPercentages = percentages;
 	Settings.ExpandedGroups = self.statlist:ExpandedGroups()
+
+	Settings.Modifiers.Active = self.modbtn:GetText()
 
 	-- ------------------------------------------------------------------------
 	-- Save settings
@@ -1192,7 +1216,7 @@ function _cmd:Execute(cmd, args)
 		mainwnd:SetVisible( not mainwnd:IsVisible() );
 		-- mainwnd:Refresh()
 	elseif ( args == "share" ) then
-		mainwnd.sharebtn:MouseClick()
+		mainwnd.sharewindow:SetVisible( not mainwnd.sharewindow:IsVisible() );
 	else
 		INFO("/%s [show | hide | toggle | share]", cmd)
 	end
