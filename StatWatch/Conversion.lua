@@ -19,11 +19,11 @@ import "MaKoPlugins.Utils";
 -- ****************************************************************************
 
 -- ----------------------------------------------------------------------------
--- Basic conversion function
+-- Basic conversion function (rating-to-percentage)
 -- ----------------------------------------------------------------------------
 
-local function r2p(K, RL)
-	if K ~= nil then return 100 * (1 / (1 + K/RL)) else return 0 end
+local function r2p(A, B, RL)
+	if B ~= nil then return A / (1 + B/RL) else return 0 end
 	end
 
 -- ----------------------------------------------------------------------------
@@ -32,10 +32,11 @@ local function r2p(K, RL)
 
 local Segment = class()
 
-function Segment:Constructor(dP, K, dRL, level)
+function Segment:Constructor(dP, A, B, level)
+	self.A = A
+	self.B = B
 	self.dP = dP
-	self.K = K
-	self.dRL = dRL
+	self.dRL = B/(A/dP-1)
     self.level = level
 end
 
@@ -44,7 +45,7 @@ local function r2p_segment(R, L, segments)
 	local p = 0
 	for key, segment in ipairs(segments) do
 		if segment.dRL == nil or segment.dRL > RL then
-			return p + r2p(segment.K, RL)
+			return p + r2p(segment.A, segment.B, RL)
 		else
 			p = p + segment.dP
 			RL = RL - segment.dRL
@@ -82,49 +83,53 @@ end
 
 local segments = {
 	["CritRate"] = {
-		Segment(15.0, 1190/3.0,        70.0, 50),
-		Segment( 5.0,    794.8,  794.8/19.0, 84),
-		Segment( 5.0,   1075.2, 1075.2/19.0)
+		Segment(15.0, 100.0, 1190/3.0, 50),
+		Segment( 5.0, 100.0,    794.8, 84),
+		Segment( 5.0, 100.0,   1075.2)
 	},
-	["DevRate"] = { Segment(10.0,  1330.0, 1330/9.0) },
-	["CritMag"] = { Segment(0,    300.0, nil) },
-	["Finesse"] = { Segment(0, 1190/3.0, nil) },
+	["DevRate"] = { Segment( 10.0, 100.0, 1330.0) },
+	["CritMag"] = { Segment(100.0, 100.0,  300.0) },
+	["Finesse"] = { Segment(100.0, 100.0, 1190/3.0) },
 	["OutHeals"] = {
-		Segment(30, 1190/3.0,   170.0, 50),
-		Segment(20, 2380/3.0, 595/3.0),
-		Segment(20, 1190,       297.5)
+		Segment(30, 100.0, 1190/3.0, 50),
+		Segment(20, 100.0, 2380/3.0),
+		Segment(20, 100.0, 1190)
 	},
 	["Resistance"] = {
-		Segment(30, 1190/3.0,   170.0, 50),
-		Segment(20, 2380/3.0, 595/3.0)
+		Segment(30, 100.0, 1190/3.0, 50),
+		Segment(20, 100.0, 2380/3.0)
 	},
-	["CritDef"] = { Segment(0, 100.0, nil) },
+	["CritDef"] = { Segment(100.0, 100.0, 100.0) },
 	["IncHeals"] = {
-		Segment(15, 1190/3.0,      70.0),
-		Segment(10, 2380/3.0, 2380/27.0)
+		Segment(15, 100.0, 1190/3.0),
+		Segment(10, 100.0, 2380/3.0)
 	},
-	["Avoidances"] = { Segment(13.0,	499.95,	43329/580.0) },
+	["Avoidances"] = { Segment(13.0, 100.0, 499.95) },
 	["Partials"] = {
-        Segment(15.0, 396.66, 59499/850.0,  50),
-        Segment( 2.0, 991.66, 49583/2450.0, 84),
-        Segment( 3.0, 1050.0, 3150/97.0,    95),
-        Segment(15.0, 1200.0, 3600/17.0)
+        Segment(15.0, 100.0, 396.66, 50),
+        Segment( 2.0, 100.0, 991.66, 84),
+        Segment( 3.0, 100.0, 1050.0, 95),
+        Segment(15.0, 100.0, 1200.0)
     },
 	["PartialMit"] = {
-	    Segment(10.0, 0.0, 0.0),
-	    Segment(50.0, 396.66, 396.66)
+	    Segment(10.0, 100.0, 0.0),
+	    Segment(50.0, 100.0, 396.66)
 	},
+
 	["LightArmor"] = {
-		Segment(20, 150, 37.5),
-		Segment(20, 350, 87.5)
+	    Segment(40,  65.0,  80),
+--		Segment(20, 100, 150, 37.5),
+--		Segment(20, 100, 350, 87.5)
 	},
 	["MediumArmor"] = {
-		Segment(20, 149.9175, 59967/1600.0),
-		Segment(30,	253.003, 759009/7000.0)
+	    Segment(50,  85.0, 104.066667),
+--		Segment(20, 100, 149.9175, 59967/1600.0),
+--		Segment(30,	100, 253.003, 759009/7000.0)
 	},
 	["HeavyArmor"] = {
-		Segment(10, 5697/38, 633/38),
-		Segment(50, 5697/38, 5697/38)
+	    Segment(60, 110.0, 138.75),
+--		Segment(10, 100, 5697/38, 633/38),
+--		Segment(50, 100, 5697/38, 5697/38)
 	},
 }
 
