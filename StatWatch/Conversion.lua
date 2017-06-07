@@ -78,7 +78,7 @@ local function r2p_linear(R, L, linears)
 end
 
 -- ----------------------------------------------------------------------------
---
+-- Stat data tables
 -- ----------------------------------------------------------------------------
 
 local segments = {
@@ -170,7 +170,8 @@ local hascap = Set{
 }
 
 -- ----------------------------------------------------------------------------
---
+-- Given the name of the stat (key), convert rating (R) to percentage
+-- according to level (L)
 -- ----------------------------------------------------------------------------
 
 function ratingToPercentage(key, R, L)
