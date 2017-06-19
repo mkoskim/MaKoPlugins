@@ -19,40 +19,40 @@ import "MaKoPlugins.Utils";
 -- ****************************************************************************
 
 -- ----------------------------------------------------------------------------
--- Basic conversion function (rating-to-percentage)
+-- New segment conversion function  for U20.1.2: Because of this, not
+-- all conversions work yet.
 -- ----------------------------------------------------------------------------
 
-local function r2p(A, B, RL)
-	if B ~= nil then return A / (1 + B/RL) else return 0 end
-	end
-
+local function r2p(R, Pmax, C, Rcap)
+    return math.max(Pmax * (C+1)/(C+Rcap/R), 0.0)
+end
+    
 -- ----------------------------------------------------------------------------
 -- Segments
 -- ----------------------------------------------------------------------------
 
 local Segment = class()
 
-function Segment:Constructor(dP, A, B, level)
-	self.A = A
-	self.B = B
-	self.dP = dP
-	self.dRL = B/(A/dP-1)
-    self.level = level
+function Segment:Constructor(Lmax, Pcap, Pmin, Pmax, C, RcapF, RcapC)
+	self.Lmax  = Lmax
+    self.Pcap  = Pcap
+    self.Pmin  = Pmin
+	self.Pmax  = Pmax
+	self.C     = C
+	self.RcapF = RcapF
+    self.RcapC = RcapC
 end
 
 local function r2p_segment(R, L, segments)
-	local RL = R/L
-	local p = 0
-	for key, segment in ipairs(segments) do
-		if segment.dRL == nil or segment.dRL > RL then
-			return p + r2p(segment.A, segment.B, RL)
-		else
-			p = p + segment.dP
-			RL = RL - segment.dRL
+	for _, segment in ipairs(segments) do
+		if segment.Lmax == nil or L <= segment.Lmax then
+		    local Rcap = L*segment.RcapF + segment.RcapC
+			local p    = segment.Pmin + r2p(R, segment.Pmax, segment.C, Rcap)
+			if segment.Pcap then p = math.min(segment.Pcap, p) end
+			return p
 		end
-	    if segment.level and L < segment.level then break end
 	end
-	return p
+	return nil;
 end
 
 -- ----------------------------------------------------------------------------
@@ -82,55 +82,66 @@ end
 -- ----------------------------------------------------------------------------
 
 local segments = {
-	["CritRate"] = {
-		Segment(15.0, 100.0, 1190/3.0, 50),
-		Segment( 5.0, 100.0,    794.8, 84),
-		Segment( 5.0, 100.0,   1075.2)
+	["LightArmor"]  = {
+	    Segment(104, 40,  0, 40, 1.6, 12800.0/100, 0),
+	    Segment(nil, 40,  0, 40, 1.6, 13600.0/105, 0),
 	},
-	["DevRate"] = { Segment( 10.0, 100.0, 1330.0) },
-	["CritMag"] = { Segment(100.0, 100.0,  300.0) },
-	["Finesse"] = { Segment(100.0, 100.0, 1190/3.0) },
+	["MediumArmor"] = {
+	    Segment(104, 50,  0, 50, 10.0/7, 14867.0/100, 0),
+	    Segment(nil, 50,  0, 50, 10.0/7, 15713.0/105, 0),
+	},
+	["HeavyArmor"]  = {
+	    Segment(104, 60,  0, 60, 1.2, 16650.0/100, 0),
+	    Segment(nil, 60,  0, 60, 1.2, 17520.0/105, 0),
+	},
+
+	["BPE"] = {
+	    Segment( 20, 13,  0, 13, 2.0, 115,     0),
+	    Segment( 50, 13,  0, 13, 2.0,  90,   500),
+	    Segment(nil, 13,  0, 13, 2.0, 200, -5000),
+	},
+	["PartialBPE"] = {
+	    Segment( 20, 15,  0, 15, 2.5, 112.5,      0),
+	    Segment( 50, 15,  0, 15, 2.5,  75.0,    750),
+	    Segment( 84, 17,  0, 17, 2.5, 775.0, -34250),
+	    Segment( 95, 20,  0, 20, 2.5, 755.0, -32150),
+	    Segment(nil, 35,  0, 35, 2.5, 850.0, -41750),
+	},
+	["PartialBPEMit"] = {
+	    Segment( 50, 60, 10, 50, 50, 121210.0/ 34, 0),
+	    Segment(nil, 60, 10, 50, 50, 287750.0/105, 0),
+	},
+
+	["Resistance"] = {
+	    Segment( 50, 30,  0, 30, 1.0,  9000.0/ 50, 0),
+	    Segment(nil, 50,  0, 50, 1.0, 39000.0/105, 0),
+	},
+
+	["CritRate"] = {
+	    Segment( 50, 15,  0, 15, 0.66,  71.5,     0.0),
+	    Segment( 84, 20,  0, 20, 1.00, 250.0, -6900.0),
+	    Segment(nil, 25,  0, 25, 1.00, 175.0,  -625.0),
+	},
+	["DevRate"] = {
+	    Segment( 50, 10,  0, 10, 2.00, 160.0,     0.0),
+	    Segment( 95, 10,  0, 10, 2.00, 165.0,  -250.0),
+	    Segment(nil, 10,  0, 10, 2.00, 180.0, -1700.0),
+	},
+	["CritMag"] = { Segment(nil, nil, 0, 50, 1.00, 300.0, 0.0), },
+	["CritDef"] = { Segment(nil, nil, 0, 50, 1.00, 100.0, 0.0), },
+	["Finesse"] = { Segment(nil, nil, 0, 50, 1.00, 400.0, 0.0), },
+
+--[[
 	["OutHeals"] = {
 		Segment(30, 100.0, 1190/3.0, 50),
 		Segment(20, 100.0, 2380/3.0),
 		Segment(20, 100.0, 1190)
 	},
-	["Resistance"] = {
-		Segment(30, 100.0, 1190/3.0, 50),
-		Segment(20, 100.0, 2380/3.0)
-	},
-	["CritDef"] = { Segment(100.0, 100.0, 100.0) },
 	["IncHeals"] = {
 		Segment(15, 100.0, 1190/3.0),
 		Segment(10, 100.0, 2380/3.0)
 	},
-	["Avoidances"] = { Segment(13.0, 100.0, 499.95) },
-	["Partials"] = {
-        Segment(15.0, 100.0, 396.66, 50),
-        Segment( 2.0, 100.0, 991.66, 84),
-        Segment( 3.0, 100.0, 1050.0, 95),
-        Segment(15.0, 100.0, 1200.0)
-    },
-	["PartialMit"] = {
-	    Segment(10.0, 100.0, 0.0),
-	    Segment(50.0, 100.0, 396.66)
-	},
-
-	["LightArmor"] = {
-	    Segment(40,  65.0,  80),
---		Segment(20, 100, 150, 37.5),
---		Segment(20, 100, 350, 87.5)
-	},
-	["MediumArmor"] = {
-	    Segment(50,  85.0, 104.066667),
---		Segment(20, 100, 149.9175, 59967/1600.0),
---		Segment(30,	100, 253.003, 759009/7000.0)
-	},
-	["HeavyArmor"] = {
-	    Segment(60, 110.0, 138.75),
---		Segment(10, 100, 5697/38, 633/38),
---		Segment(50, 100, 5697/38, 5697/38)
-	},
+--]]
 }
 
 local linears = {
@@ -160,9 +171,9 @@ local hascap = Set{
 	"OutHeals",
 	"Resistance",
 	"IncHeals",
-	"Avoidances",
-	"Partials",
-	"PartialMit",
+	"BPE",
+	"PartialBPE",
+	-- "PartialMit",
 	"LightArmor",
 	"MediumArmor",
 	"HeavyArmor",
@@ -185,11 +196,11 @@ function ratingCap(key, L)
 	if L == 0 then return nil end;
 	if hascap[key] == nil then return nil end;
 	if segments[key] then
-	    local cap = 0
-	    for _, seg in pairs(segments[key]) do
-		    cap = cap + seg.dRL
+	    for _, segment in ipairs(segments[key]) do
+		    if segment.Lmax == nil or L <= segment.Lmax then
+			    return L*segment.RcapF + segment.RcapC
+		    end
 	    end
-	    return cap * L;
     elseif linears[key] then
 	    for _, lin in pairs(linears[key]) do
 		    if L <= lin.level then

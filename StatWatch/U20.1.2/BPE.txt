@@ -1,0 +1,29 @@
+Rating  Full-%  Partial-%   PartMit (type)  (class)
+
+25,410  13.0    28.0        51.6    Evade   WRD
+23,612  13.0    27.2        51.0    Parry   CHM
+23,382  13.0    27.0        50.9    Evade   WRD
+20,454  13.0    25.4        49.8    Evade   WRD
+18,952  13.0    24.5        49.1    Parry   WRD
+18,426  13.0    24.1        48.9    Evade   WRD
+17,600  13.0    23.6        48.4    Parry   WRD
+16,410  13.0    22.7        47.8    Evade   WRD
+15,648  12.9    22.1        47.3    Parry   WRD
+14,296  12.5    21.0        46.4    Parry   WRD
+14,229  12.5    21.0        46.3    Evade   WRD
+12,952  12.1    19.9        45.3    Parry   WRD
+12,177  11.8    19.1        44.6    Evade   WRD
+11,498  11.5    18.5        44.0    Parry   WRD
+10,130  10.9    17.0        42.5    Parry   WRD
+ 9,798  10.7    16.7        42.1    Evade   WRD
+ 8,112   9.8    14.7        39.8    Parry   WRD
+ 7,617   9.5    14.0        39.1    Evade   WRD
+ 6,658   8.9    12.7        37.4    Parry   WRD
+ 5,811   8.2    11.5        35.6    Evade   WRD
+ 5,454   7.9    10.9        34.8    Parry   WRD
+ 3,020   5.3     6.7        27.6    Block   WRD
+ 1,307   2.7     3.2        19.4    Evade   CHM
+ 1,152   2.5     2.8        18.4    Parry   MNS
+ 1,135   2.4     2.8        18.4    Block   MNS
+ 1,019   2.2     2.5        17.7    Evade   MNS
+ 

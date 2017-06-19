@@ -287,17 +287,17 @@ Stat("CritDef", function() return attr:GetBaseCriticalHitAvoidance() end, "CritD
 Stat("HealOut", function() return ToPercent("OutHeals", attr:GetOutgoingHealing(), player:GetLevel()) end, nil, FormatPercentageInc)
 Stat("HealIn", function() return attr:GetIncomingHealing() end, "IncHeals")
 
-Stat("Block", function() return (attr:CanBlock() and attr:GetBlock()) or 0 end, "Avoidances")
-Stat("Parry", function() return (attr:CanParry() and attr:GetParry()) or 0 end, "Avoidances")
-Stat("Evade", function() return (attr:CanEvade() and attr:GetEvade()) or 0 end, "Avoidances")
+Stat("Block", function() return (attr:CanBlock() and attr:GetBlock()) or 0 end, "BPE")
+Stat("Parry", function() return (attr:CanParry() and attr:GetParry()) or 0 end, "BPE")
+Stat("Evade", function() return (attr:CanEvade() and attr:GetEvade()) or 0 end, "BPE")
 
-Stat("PartialBlock", function() return ToPercent("Partials", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialParry", function() return ToPercent("Partials", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialEvade", function() return ToPercent("Partials", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialBlock", function() return ToPercent("PartialBPE", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialParry", function() return ToPercent("PartialBPE", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialEvade", function() return ToPercent("PartialBPE", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
 
-Stat("PartialBlockMit", function() return ToPercent("PartialMit", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialParryMit", function() return ToPercent("PartialMit", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialEvadeMit", function() return ToPercent("PartialMit", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialBlockMit", function() return ToPercent("PartialBPEMit", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialParryMit", function() return ToPercent("PartialBPEMit", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
+Stat("PartialEvadeMit", function() return ToPercent("PartialBPEMit", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
 
 Stat("CommonMit", function() return attr:GetCommonMitigation() end, armortype)
 Stat("PhysMit", function() return attr:GetPhysicalMitigation() end, armortype)
@@ -468,7 +468,7 @@ function StatShareWindow:Constructor()
 
     -- ------------------------------------------------------------------------
 
-    self.channelbtn = Utils.UI.DropDown({"/f", "/ra", "/k", "/o", "/say", "/tell" })
+    self.channelbtn = Utils.UI.DropDown({"", "/f", "/ra", "/k" })
     self.channelbtn:SetParent( self );
 
     self.namebox = Utils.UI.ScrolledTextBox()
@@ -494,7 +494,9 @@ function StatShareWindow:Constructor()
     self.createbtn:SetText("Create")
     self.createbtn.MouseClick = function(sender, args)
         local channel = self.channelbtn:GetText()
-        local target = (channel == "/tell") and self.namebox:GetText() or ""
+        if channel == "" then
+            channel = self.namebox:GetText()
+        end
 
         local text = { }
         for _, key in pairs(self.order) do
@@ -508,9 +510,9 @@ function StatShareWindow:Constructor()
 
         self.sendbtn:SetShortcut(Turbine.UI.Lotro.Shortcut(
             Turbine.UI.Lotro.ShortcutType.Alias,
-            string.format("%s %s Stats %s (%s):\n%s",
-                channel, target,
-                player:GetName(), Utils.ClassAsString[player:GetClass()],
+            string.format("%s Stats %s (%s @ %d):\n%s",
+                channel,
+                player:GetName(), Utils.ClassAsString[player:GetClass()], player:GetLevel(),
                 text
             )
         ))

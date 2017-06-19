@@ -1,0 +1,39 @@
+Heavy (CHM 105)
+Rating  (type)  Lotro   Plugin
+17,327  PMit    59.7    59.7
+17,216  TMit    59.4    59.4
+13,495  PMit    52.8    52.8
+12,281  OC/FW   50.3    50.3
+11,956  PMit    49.5    49.5
+ 6,519  OC/FW   34.0    34.0
+ 5,753  OC/FW   31.1    31.1
+ 4,563  TMit    26.2    26.2
+ 4,214  OC/FW   24.6    24.6
+ 4,050  TMit    23.9    23.9
+ 
+Medium (HNT 105)
+Rating  (type)  Lotro   Plugin
+
+15,207  TMit    49.3    49.3
+14,170  TMit    47.9    47.8
+12,621  OC/FW   45.4    45.4
+12,549  PMit    45.3    45.3
+11,010  PMit    42.5    42.5
+ 5,322  TMit    27.7    27.7
+ 4,324  OC/FW   24.0    24.0
+ 3,351  TMit    19.8    19.8
+ 2,785  OC/FW   17.2    17.2
+
+Light (MNS 105)
+Rating  Type    Lotro   Plugin
+
+12,076  Phys    38.1    38.1
+11,854  Tact    37.9    37.9
+10,537  Phys    36.0    36.0
+10,239  Tact    35.5    35.5
+ 9,726  Tact    34.7    34.7
+ 7,850  OC/FW   31.2    31.2
+ 4,579  OC/FW   22.8    22.8
+ 3,040  OC/FW   17.1    17.1
+
+
