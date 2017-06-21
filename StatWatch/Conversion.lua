@@ -24,7 +24,7 @@ import "MaKoPlugins.Utils";
 -- ----------------------------------------------------------------------------
 
 local function r2p(R, Pmax, C, Rcap)
-    return math.max(Pmax * (C+1)/(C+Rcap/R), 0.0)
+    return Pmax * (C+1)/(C+Rcap/R)
 end
     
 -- ----------------------------------------------------------------------------
@@ -43,13 +43,20 @@ function Segment:Constructor(Lmax, Pcap, Pmin, Pmax, C, RcapF, RcapC)
     self.RcapC = RcapC
 end
 
+function Segment:Rcap(L)
+    return L*self.RcapF + self.RcapC
+end
+
+function Segment:p(R, L)
+    local p = self.Pmin + r2p(R, self.Pmax, self.C, self:Rcap(L))
+    if self.Pcap then p = math.min(self.Pcap, p) end
+    return p
+end
+
 local function r2p_segment(R, L, segments)
 	for _, segment in ipairs(segments) do
 		if segment.Lmax == nil or L <= segment.Lmax then
-		    local Rcap = L*segment.RcapF + segment.RcapC
-			local p    = segment.Pmin + r2p(R, segment.Pmax, segment.C, Rcap)
-			if segment.Pcap then p = math.min(segment.Pcap, p) end
-			return p
+		    return segment:p(R, L)
 		end
 	end
 	return nil;
@@ -108,8 +115,8 @@ local segments = {
 	    Segment(nil, 35,  0, 35, 2.5, 850.0, -41750),
 	},
 	["PartialBPEMit"] = {
-	    Segment( 50, 60, 10, 50, 50, 121210.0/ 34, 0),
-	    Segment(nil, 60, 10, 50, 50, 287750.0/105, 0),
+	    Segment( 50, 60, 10, 50, 50, 121210.0 /  34, 0),
+	    Segment(nil, 60, 10, 50, 50, 287750.0 / 105, 0),
 	},
 
 	["Resistance"] = {
@@ -168,6 +175,7 @@ end
 local hascap = Set{
 	"CritRate",
 	"DevRate",
+	"Mastery",
 	"OutHeals",
 	"Resistance",
 	"IncHeals",
@@ -177,7 +185,6 @@ local hascap = Set{
 	"LightArmor",
 	"MediumArmor",
 	"HeavyArmor",
-	"Mastery",
 }
 
 -- ----------------------------------------------------------------------------
@@ -186,19 +193,18 @@ local hascap = Set{
 -- ----------------------------------------------------------------------------
 
 function ratingToPercentage(key, R, L)
-	if R == 0 or L == 0 then return 0 end
+    if R == nil then return nil end
 	if segments[key] then return r2p_segment(R, L, segments[key]) end
 	if linears[key] then return r2p_linear(R, L, linears[key]) end
-    return 0
+    return nil
 end
 
 function ratingCap(key, L)
-	if L == 0 then return nil end;
 	if hascap[key] == nil then return nil end;
 	if segments[key] then
 	    for _, segment in ipairs(segments[key]) do
 		    if segment.Lmax == nil or L <= segment.Lmax then
-			    return L*segment.RcapF + segment.RcapC
+			    return segment:Rcap(L)
 		    end
 	    end
     elseif linears[key] then
@@ -211,34 +217,3 @@ function ratingCap(key, L)
     end
 end
 
--- ****************************************************************************
--- ****************************************************************************
---
--- Armor classes (to calculate mitigation percentages)
---
--- ****************************************************************************
--- ****************************************************************************
-
-ArmorType = {
-	[Turbine.Gameplay.Class.Beorning] = "MediumArmor",
-	[Turbine.Gameplay.Class.Burglar] = "MediumArmor",
-	[Turbine.Gameplay.Class.Captain] = "HeavyArmor",
-	[Turbine.Gameplay.Class.Champion] = "HeavyArmor",
-	[Turbine.Gameplay.Class.Guardian] = "HeavyArmor",
-	[Turbine.Gameplay.Class.Hunter] = "MediumArmor",
-	[Turbine.Gameplay.Class.LoreMaster] = "LightArmor",
-	[Turbine.Gameplay.Class.Minstrel] = "LightArmor",
-	[Turbine.Gameplay.Class.RuneKeeper] = "LightArmor",
-	[Turbine.Gameplay.Class.Warden] = "MediumArmor",
-}
-
--- BlackArrow
--- Chicken	192
--- Defiler	128
--- Ranger	191
--- Reaver	71
--- Stalker	126
--- Troll	190
--- Undefined	0
--- WarLeader	52
--- Weaver	127

@@ -12,678 +12,86 @@
 --
 -- ****************************************************************************
 
-import "MaKoPlugins.StatWatch.Bindings";
-import "MaKoPlugins.StatWatch.Conversion";
-
--- ----------------------------------------------------------------------------
--- Obtain & extending player info, ready for using
--- ----------------------------------------------------------------------------
-
-local player  = Turbine.Gameplay.LocalPlayer:GetInstance();
-local attr    = player:GetAttributes()
-local effects = player:GetEffects()
-local equip   = player:GetEquipment()
-
-local armortype = ArmorType[player:GetClass()]
+import "MaKoPlugins.StatWatch.Bindings"
+import "MaKoPlugins.StatWatch.Stats"
+import "MaKoPlugins.StatWatch.Migration"
+import "MaKoPlugins.StatWatch.ShareWindow"
 
 -- ****************************************************************************
 -- ****************************************************************************
 --
--- Plugin settings (autoload settings at startup)
+-- Plugin settings (autoload settings at startup). When changing settings
+-- (adding, modifying or removing entries), increase SettingsVersion, and add
+-- correct migration to Migration.Migrate().
 --
 -- ****************************************************************************
 -- ****************************************************************************
 
-local DefaultSettings = {
-    SettingsVersion = 3,
+local Settings = Migrate(
+    PlugIn:LoadSettings("StatWatchSettings"),
+    {
+        SettingsVersion = 3,
 
-    ExpandedGroups = { },
-    ShowPercentages = true,
-
-    BrowseWindow = {
-        Left = 0, Top  = 0,
-        Width = 200, Height = 200,
-        Visible = true,
-        Toggle = {
-            Left = 200, Top = 0, Visible = true
-        }
-    },
-
-    ShareWindow = {
-        Left = 0, Top = 0,
-        Width = 200, Height = 200,
-        Visible = false,
-        Toggle = {
-            Left = 230, Top = 0, Visible = true
-        }
-    },
-    
-    Modifiers = {
-        Active = "T1",
-        T1 = { },
-        T2 = {
-            Block = function(L) return -40 * L end,
-            Parry = function(L) return -40 * L end,
-            Evade = function(L) return -40 * L end,
-            Resistance = function(L) return -90 * L end,
-            CommonMit = function(L) return -5 * math.floor(L * 13.5) end,
-            TactMit = function(L) return -5 * math.floor(L * 13.5) end,
-            PhysMit = function(L) return -5 * math.floor(L * 13.5) end,
-        },
-    }
-}
-
-local Settings = PlugIn:LoadSettings("StatWatchSettings", DefaultSettings)
-
--- ----------------------------------------------------------------------------
--- Converting old settings to new ones
--- ----------------------------------------------------------------------------
-
-if Settings["SettingsVersion"] == nil then
-    Settings = {
-        ExpandedGroups = Settings.ExpandedGroups,
-        ShowPercentages = Settings.ShowPercentages,
+        ExpandedGroups = { },
+        ShowPercentages = true,
 
         BrowseWindow = {
-            Left    = Settings.WindowPosition.Left,
-            Top     = Settings.WindowPosition.Top,
-            Width   = Settings.WindowPosition.Width,
-            Height  = Settings.WindowPosition.Height,
-            Visible = Settings.WindowVisible,
+            Left = 0, Top  = 0,
+            Width = 200, Height = 200,
+            Visible = true,
+            Toggle = {
+                Left = 200, Top = 0, Visible = true
+            }
         },
-        ShareWindow = DefaultSettings.ShareWindow,
-        SettingsVersion = 1,
+
+        ShareWindow = {
+            Left = 0, Top = 0,
+            Width = 200, Height = 200,
+            Visible = false,
+            Toggle = {
+                Left = 230, Top = 0, Visible = true
+            }
+        },
+        
+        Modifiers = {
+            Active = "T1",
+        }
     }
-end
-
-if Settings["SettingsVersion"] == 1 then
-    Settings.BrowseWindow.Toggle = DefaultSettings.BrowseWindow.Toggle
-    Settings.ShareWindow.Toggle = DefaultSettings.ShareWindow.Toggle
-    Settings.SettingsVersion = 2
-end
-
-if Settings["SettingsVersion"] == 2 then
-    Settings.Modifiers = DefaultSettings.Modifiers
-    Settings.SettingsVersion = 3
-end
-
-Settings.Modifiers.T2 = DefaultSettings.Modifiers.T2
+)
 
 -- ****************************************************************************
 -- ****************************************************************************
 
-local function FormatNumber(number, decimals)
-    if number < 1000 then
-        return string.format("%." .. tostring(decimals or 0) .. "f", number)
-    -- elseif number < 1000 then
-    --	return string.format("%.0f", number)
-    elseif number < 150000 then
-        return string.format("%d,%03d", (number+0.5)/1000, (number+0.5)%1000)
-    elseif number < 1000000 then
-        return string.format("%.1fk", (number+0.5)/1000)
-    elseif number < 1500000 then
-        return string.format("%d,%03.1fk", (number+0.5)/1000000, ((number+0.5)%1000000)/1000)
-    else
-        return string.format("%.2fM", number/1e6)
-    end
-end
-
--- ****************************************************************************
--- ****************************************************************************
---
--- Stat retrieving, converting and formatting
---
--- ****************************************************************************
--- ****************************************************************************
-
--- ----------------------------------------------------------------------------
--- Stat class to obtain & format stats
--- ----------------------------------------------------------------------------
-
-local Stat = class()
-local stats = { }
-local percentages = Settings.ShowPercentages
-local ToPercent = ratingToPercentage
-
-local function FormatPercentage(value) return string.format("%.1f %%", value) end
-local function FormatPercentageInc(value) return string.format("%+.1f %%", value) end
-local function FormatELM(value) return string.format("x %3.1f", value) end
+local player  = Turbine.Gameplay.LocalPlayer:GetInstance();
+player.attr   = player:GetAttributes();
 
 -- ----------------------------------------------------------------------------
 
-function Stat:Constructor(key, rawvalue, percentage, fmt)
-    self.key = key
-    self.rawvalue = rawvalue
-    self.refvalue = nil
-    self.percentage = percentage
-
-    if fmt ~= nil then
-        self.fmt = fmt
-    else
-        self.fmt = function(number) return FormatNumber(number) end
-    end
-
-    stats[key] = self
-end
-
--- ----------------------------------------------------------------------------
-
-function Stat:Modifier()
-    local mod = Settings.Modifiers[Settings.Modifiers.Active][self.key]
-    if mod == nil then return 0 end
-    return mod(player:GetLevel())
-end
-
-function Stat:Rating()
-    return self.rawvalue()
-end
-
-function Stat:ModRating()
-    return math.max(self:Rating() + self:Modifier(), 0)
-end
-
-function Stat:RatingCap()
-    local cap = ratingCap(self.percentage, player:GetLevel())
-    if cap == nil then return nil end
-    return math.max(cap - self:Modifier(), 0)
-end
-
-function Stat:Percentage()
-    return ToPercent(self.percentage, self:ModRating(), player:GetLevel())
-end
-
-function Stat:RatingAsString()
-    return self.fmt( self:Rating() )
-end
-
-function Stat:PercentAsString()
-    return self.percentage and FormatPercentage(self:Percentage()) or ""
-end
-
-function Stat:AsString()
-	if type(self.rawvalue) == "string" then
-		return self.rawvalue
-	elseif percentages and self.percentage then
-		return self:PercentAsString()
-	else
-		return self:RatingAsString()
-	end
-end
-
-function Stat:DiffAsString()
-	if self.refvalue == nil then return "" end
-	diff = self:Rating() - self.refvalue
-	if math.abs(diff) < 0.1 then
-		return ""
-	elseif percentages and self.percentage then
-		diff = self:Percentage() - ToPercent( self.percentage, self.refvalue, player:GetLevel() )
-		return FormatPercentageInc(diff)
-	else
-		return self.fmt(diff)
-	end
-end
-
--- ----------------------------------------------------------------------------
-
-function Stat:SetRef()
-	if type(self.rawvalue) ~= "string" then
-		self.refvalue = self.rawvalue()
-	end
-end
-
-function Stat:SetCapRef()
-	if type(self.rawvalue) ~= "string" then
-		self.refvalue = self:RatingCap()
-	end
-end
-
-function Stat:ClrRef() self.refvalue = nil end
-
--- ----------------------------------------------------------------------------
+local stats = Stats(player)
 
 local function SetReference()
-	for key, stat in pairs(stats) do stat:SetRef() end
+    stats.reference = { }
+    for key, value in pairs(stats.ratings) do
+        stats.reference[key] = value
+    end
 end
 
 local function SetCapReference()
-	for key, stat in pairs(stats) do stat:SetCapRef() end
+    stats.reference = CapRatings(player:GetLevel(), ArmorType[player:GetClass()])
+    Ratings.sub(stats.reference, stats.modifier.hidden)
+    -- dumptable(stats.reference)
 end
 
 local function ClearReference()
-	for key, stat in pairs(stats) do stat:ClrRef() end
+    stats.reference = { }
 end
 
--- ----------------------------------------------------------------------------
--- Stats
--- ----------------------------------------------------------------------------
-
-Stat("", "")
-Stat("N/A", "N/A")
-
-Stat("Morale", function() return player:GetMaxMorale() end)
-Stat("Power", function() return player:GetMaxPower() end)
-
-Stat("ICMR", function() return attr:GetInCombatMoraleRegeneration() end, nil, function(v) return FormatNumber(v, 1) end)
-Stat("ICPR", function() return attr:GetInCombatPowerRegeneration() end, nil, function(v) return FormatNumber(v, 1) end)
-
-Stat("Armor", function() return attr:GetArmor() end)
-Stat("Might", function() return attr:GetMight() end)
-Stat("Agility", function() return attr:GetAgility() end)
-Stat("Vitality", function() return attr:GetVitality() end)
-Stat("Will", function() return attr:GetWill() end)
-Stat("Fate", function() return attr:GetFate() end)
-
-Stat("CritRate", function() return attr:GetBaseCriticalHitChance() end, "CritRate")
-Stat("CritMag", function() return ToPercent("CritMag", stats["CritRate"]:Rating(), player:GetLevel()) end, nil, FormatPercentageInc)
-Stat("DevRate", function() return ToPercent("DevRate", stats["CritRate"]:Rating(), player:GetLevel()) end, nil, FormatPercentage)
-
-Stat("Finesse", function() return attr:GetFinesse() end, "Finesse")
-Stat("PhysMast", function() return math.max(attr:GetMeleeDamage(), attr:GetRangeDamage()) end, "Mastery")
-Stat("TactMast", function() return attr:GetTacticalDamage() end, "Mastery")
-
-Stat("Resistance", function() return attr:GetBaseResistance() end, "Resistance")
-Stat("CritDef", function() return attr:GetBaseCriticalHitAvoidance() end, "CritDef")
-
-Stat("HealOut", function() return ToPercent("OutHeals", attr:GetOutgoingHealing(), player:GetLevel()) end, nil, FormatPercentageInc)
-Stat("HealIn", function() return attr:GetIncomingHealing() end, "IncHeals")
-
-Stat("Block", function() return (attr:CanBlock() and attr:GetBlock()) or 0 end, "BPE")
-Stat("Parry", function() return (attr:CanParry() and attr:GetParry()) or 0 end, "BPE")
-Stat("Evade", function() return (attr:CanEvade() and attr:GetEvade()) or 0 end, "BPE")
-
-Stat("PartialBlock", function() return ToPercent("PartialBPE", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialParry", function() return ToPercent("PartialBPE", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialEvade", function() return ToPercent("PartialBPE", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-
-Stat("PartialBlockMit", function() return ToPercent("PartialBPEMit", stats["Block"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialParryMit", function() return ToPercent("PartialBPEMit", stats["Parry"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-Stat("PartialEvadeMit", function() return ToPercent("PartialBPEMit", stats["Evade"]:ModRating(), player:GetLevel()) end, nil, FormatPercentage)
-
-Stat("CommonMit", function() return attr:GetCommonMitigation() end, armortype)
-Stat("PhysMit", function() return attr:GetPhysicalMitigation() end, armortype)
-Stat("TactMit", function() return attr:GetTacticalMitigation() end, armortype)
-
--- ----------------------------------------------------------------------------
--- Calculated stats
--- ----------------------------------------------------------------------------
-
-Stat("Avoidances", function()
-	return
-		stats["Block"]:Percentage() + 
-		stats["Parry"]:Percentage() +
-		stats["Evade"]:Percentage();
-	end,
-	nil,
-	FormatPercentage
-)
-
-Stat("Partials", function()
-	return
-		stats["PartialBlock"]:Rating() + 
-		stats["PartialParry"]:Rating() +
-		stats["PartialEvade"]:Rating();
-	end,
-	nil,
-	FormatPercentage
-)
-
-Stat("AvoidChance", function()
-	return
-	    100.0 - 100.0 * 
-	    (1.0 - stats["Avoidances"]:Rating()/100.0) *
-	    (1.0 - stats["Partials"]:Rating() / 100.0)
-	end,
-	nil,
-	FormatPercentage
-)
-
---[[
-Stat("SelfHeal", function()
-	return 100 *
-		(1.0 + stats["HealIn"]:Percentage()/100.0) *
-		(1.0 + stats["HealOut"]:Percentage()/100.0) - 100
-	end,
-	nil,
-	FormatPercentageInc
-)
-
-Stat("EffectiveMoralePhys", function()
-    return stats["Morale"] *
-		(1 - stats["CommonMit"]:Percentage()/100.0)
-    end,
-    nil
-)
-
-Stat("CommonELM", function()
-	return 1.0 / ( 
-		-- (1 - stats["Avoidances"]:Value()/100.0) *
-		(1 - stats["CommonMit"]:Percentage()/100.0)
-	)
-	end,
-	nil,
-	FormatELM
-)
-
-Stat("TactELM", function()
-	return 1.0 / ( 
-		-- (1 - stats["Avoidances"]:Value()/100.0) *
-		(1 - stats["TactMit"]:Percentage()/100.0)
-	)
-	end,
-	nil,
-	FormatELM
-)
-]]--
-
--- ****************************************************************************
--- ****************************************************************************
---
--- Share window: This is bit hairy. We need to create a shortcut, which
--- contains alias, which contains command to send a line to correct
--- channel.
---
--- ****************************************************************************
--- ****************************************************************************
-
-StatShareGroup = class(Utils.UI.TreeGroup)
-
-function StatShareGroup:Constructor(name)
-    Utils.UI.TreeGroup.Constructor(self);
-
-	self:SetSize( 270, 16 );
-
-	self.labelKey = Turbine.UI.Label();
-	self.labelKey:SetParent( self );
-	self.labelKey:SetLeft( 20 );
-	self.labelKey:SetSize( 250, 16 );
-	self.labelKey:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
-	self.labelKey:SetText( name );
-
-    self.node = Utils.UI.TreeNode()
-
-    self.textbox = Turbine.UI.TextBox()
-    self.textbox:SetParent(self.node)
-	self.textbox:SetFont(Turbine.UI.Lotro.Font.Verdana14);
-    self.textbox:SetMultiline(true)
-    self.textbox:SetReadOnly(true)
-    self.textbox:SetSelectable(true)
-
-    self:GetChildNodes():Add(self.node)
+local function SetModifierT1()
+    stats.modifier.hidden = { }
 end
 
-function StatShareGroup:SetText(text)
-    local lines = select(2, text:gsub('\n', '\n')) + 1
-
-    self.node:SetSize(240, 14 * lines + 4)
-    self.textbox:SetSize(self.node:GetWidth(), self.node:GetHeight())
-    self.textbox:SetText(text)
-end
-
-function StatShareGroup:GetText()
-    return self.textbox:GetText()
-end
-
--- ----------------------------------------------------------------------------
-
-StatShareWindow = class(Utils.UI.Window)
-
-function StatShareWindow:Constructor()
-	Utils.UI.Window.Constructor(self);
-
-	self:SetText("Share stats");
-
-	self:SetMinimumWidth(310);
-	self:SetMaximumWidth(310);
-
-	self:SetResizable(true);
-
-    -- ------------------------------------------------------------------------
-
-    self.chooser = Utils.UI.TreeView()
-    self.chooser:SetParent(self)
-
-    self.groups = {
-        ["MoralePower"] = StatShareGroup("Morale & Power"),
-        ["Regen"] = StatShareGroup("In-combat Regen"),
-        ["BasicStats"] = StatShareGroup("Basic Stats"),
-        ["Offence"] = StatShareGroup("Offence"),
-        ["Defence"] = StatShareGroup("Defence"),
-        ["Avoidance"] = StatShareGroup("Avoidance"),
-        ["Mitigations"] = StatShareGroup("Mitigations"),
-    }
-
-    self.order = {
-        "MoralePower", "Regen",
-        "BasicStats",
-        "Offence",
-        "Defence", "Avoidance",
-        "Mitigations",
-    }
-
-    for _, key in pairs(self.order) do
-        local group = self.groups[key]
-        self.chooser:GetNodes():Add( group )
-        group:SetExpanded(false)
-    end
-
-    -- ------------------------------------------------------------------------
-
-    self.channelbtn = Utils.UI.DropDown({"", "/f", "/ra", "/k" })
-    self.channelbtn:SetParent( self );
-
-    self.namebox = Utils.UI.ScrolledTextBox()
-    self.namebox:SetParent(self)
-    self.namebox:SetMultiline(false)
-    self.namebox:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
-    self.namebox:SetText("")
-
-    self.sendbtn = Utils.UI.QuickslotButton(
-        -- Utils.UI.IconButton(Utils.UI.Icons.ChatBubble)
-    )
-    -- self.sendbtn:SetSize(16, 16)
-    self.sendbtn:SetText("Send")
-    self.sendbtn:SetSize( 37, 20 );
-    self.sendbtn:SetParent( self )
-    self.sendbtn.quickslot.MouseClick = function(sender, args)
-        self.sendbtn:SetEnabled(false)
-    end
-    -- self.sendbtn.quickslot:SetVisible(false)
-
-    self.createbtn = Turbine.UI.Lotro.Button()
-    self.createbtn:SetParent( self );
-    self.createbtn:SetText("Create")
-    self.createbtn.MouseClick = function(sender, args)
-        local channel = self.channelbtn:GetText()
-        if channel == "" then
-            channel = self.namebox:GetText()
-        end
-
-        local text = { }
-        for _, key in pairs(self.order) do
-            local group = self.groups[key]
-            if group:IsExpanded() then
-                table.insert(text, group:GetText())
-            end
-        end
-
-        text = table.concat(text, "\n- - - - - - - - - - - - - - - - - - -\n")
-
-        self.sendbtn:SetShortcut(Turbine.UI.Lotro.Shortcut(
-            Turbine.UI.Lotro.ShortcutType.Alias,
-            string.format("%s Stats %s (%s @ %d):\n%s",
-                channel,
-                player:GetName(), Utils.ClassAsString[player:GetClass()], player:GetLevel(),
-                text
-            )
-        ))
-        -- self.sendbtn:SetEnabled.quickslot:SetVisible(true)
-    end
-
-
-    -- ------------------------------------------------------------------------
-
-    self.toggle = Utils.UI.ToggleWindowButton("share", self)
-    self.toggle:Deserialize(Settings.ShareWindow.Toggle)
-
-    -- ------------------------------------------------------------------------
-
-    self:Deserialize(Settings.ShareWindow)
-
-    self:SetVisible(false)
-end
-
--- ----------------------------------------------------------------------------
--- Layouting
--- ----------------------------------------------------------------------------
-
-function StatShareWindow:SizeChanged( args )
-
-    self.chooser:SetPosition( 20, 40 );
-    self.chooser:SetSize(
-        self:GetWidth() - 2*20,
-        self:GetHeight() - (40 + 60)
-    );
-
-    -- ------------------------------------------------------------------------
-
-    local btntop = self:GetHeight() - 45
-
-    self.channelbtn:SetWidth(60);
-    self.channelbtn:SetPosition(20, btntop)
-
-    self.namebox:SetSize(
-        self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 35) - 20,
-        18
-    );
-    self.namebox:SetPosition(20 + 65, btntop + 1)
-
-    -- ------------------------------------------------------------------------
-
-    self.createbtn:SetSize( 60, 18 );
-    self.createbtn:SetPosition(
-        self:GetWidth() - 60 - 35 - 25,
-        btntop
-    );
-
-    self.sendbtn:SetPosition(
-        self:GetWidth()  - 35 - 20,
-        btntop
-    );
-end
-
--- ----------------------------------------------------------------------------
---
--- ----------------------------------------------------------------------------
-
-function StatShareWindow:SetVisible(state)
-    Utils.UI.Window.SetVisible(self, state)
-    if state then self:Refresh() end
-end
-
--- ----------------------------------------------------------------------------
--- Creating string from stats: this is aimed to be used to share
--- builds with people
--- ----------------------------------------------------------------------------
-
-function StatShareWindow:Refresh()
-    self.groups["MoralePower"]:SetText(
-        string.format("Morale..: %s", stats["Morale"]:AsString()) .. "\n" ..
-        string.format("Power...: %s", stats["Power"]:AsString())
-    )
-
-    self.groups["Regen"]:SetText(
-        string.format("ICMR...: %s (%s / s)",
-            FormatNumber(stats["ICMR"]:Rating() * 60),
-            stats["ICMR"]:AsString()
-        )  .. "\n" ..
-        string.format("ICPR....: %s (%s / s)",
-            FormatNumber(stats["ICPR"]:Rating() * 60),
-            stats["ICPR"]:AsString()
-        )
-    )
-
-    self.groups["BasicStats"]:SetText(
-        string.format("Might.....: %s", stats["Might"]:RatingAsString())  .. "\n" ..
-        string.format("Agility....: %s", stats["Agility"]:RatingAsString())  .. "\n" ..
-        string.format("Vitality...: %s", stats["Vitality"]:RatingAsString())  .. "\n" ..
-        string.format("Will........: %s", stats["Will"]:RatingAsString())  .. "\n" ..
-        string.format("Fate......: %s", stats["Fate"]:RatingAsString())
-    )
-
-    self.groups["Offence"]:SetText(
-        string.format("Critical Rating....: %s - %s",
-            stats["CritRate"]:RatingAsString(),
-            stats["CritRate"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Finesse.............: %s - %s",
-            stats["Finesse"]:RatingAsString(),
-            stats["Finesse"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Physical Mastery: %s - %s",
-            stats["PhysMast"]:RatingAsString(),
-            stats["PhysMast"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Tactical Mastery: %s - %s",
-            stats["TactMast"]:RatingAsString(),
-            stats["TactMast"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Outgoing Healing: %s",
-            stats["HealOut"]:RatingAsString()
-        )
-    )
-
-    self.groups["Defence"]:SetText(
-        string.format("Resistance........: %s - %s",
-            stats["Resistance"]:RatingAsString(),
-            stats["Resistance"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Critical Defence.: %s - %s",
-            stats["CritDef"]:RatingAsString(),
-            stats["CritDef"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Incoming Healing: %s - %s",
-            stats["HealIn"]:RatingAsString(),
-            stats["HealIn"]:PercentAsString()
-        )
-    )
-
-    self.groups["Avoidance"]:SetText(
-        string.format("Block.: %s - %s",
-            stats["Block"]:RatingAsString(),
-            stats["Block"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Parry.: %s - %s",
-            stats["Parry"]:RatingAsString(),
-            stats["Parry"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Evade: %s - %s",
-            stats["Evade"]:RatingAsString(),
-            stats["Evade"]:PercentAsString()
-        )
-        .. "\n\n" ..
-        string.format("BPE (Full): %s", stats["Avoidances"]:RatingAsString())
-        .. "\n" ..
-        string.format("BPE (Partial): %s", stats["Partials"]:RatingAsString())
-        .. "\n" ..
-        string.format("Avoid Chance: %s",
-            stats["AvoidChance"]:RatingAsString()
-        )
-    )
-
-    self.groups["Mitigations"]:SetText(
-        string.format("Phys. Mitigation..: %s - %s",
-            stats["CommonMit"]:RatingAsString(),
-            stats["CommonMit"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("Tact. Mitigation..: %s - %s",
-            stats["TactMit"]:RatingAsString(),
-            stats["TactMit"]:PercentAsString()
-        ) .. "\n" ..
-        string.format("OC/FW Mitigation: %s - %s",
-            stats["PhysMit"]:RatingAsString(),
-            stats["PhysMit"]:PercentAsString()
-        )
-    )
+local function SetModifierT2()
+    stats.modifier.hidden = T2Modifiers(player:GetLevel())
 end
 
 -- ****************************************************************************
@@ -704,12 +112,8 @@ function StatNode:Constructor( text, key )
 
 	Utils.UI.TreeNode.Constructor( self );
 
-	self.text = text
-	if key ~= nil then
-		self.key = key
-	else
-		self.key = text
-	end
+	self.text  = text
+    self.key   = key ~= nil and key or text
 
 	self:SetSize( 240, 16 );
 
@@ -719,7 +123,6 @@ function StatNode:Constructor( text, key )
 	self.labelText:SetSize( 120, 16 );
 	self.labelText:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleLeft );
     self.labelText:SetMultiline(false)
-	-- self.labelText:SetMouseVisible( false );
 	self.labelText:SetText( self.text );
 	
 	self.labelValue = Turbine.UI.Label();
@@ -727,15 +130,14 @@ function StatNode:Constructor( text, key )
 	self.labelValue:SetSize( 60, 16 );
 	self.labelValue:SetLeft( 120 );
 	self.labelValue:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleRight );
-	-- self.labelValue:SetMouseVisible( false );
+    self.labelValue:SetMultiline(false)
 
 	self.labelRef = Turbine.UI.Label();
 	self.labelRef:SetParent( self );
 	self.labelRef:SetSize( 60, 16 );
 	self.labelRef:SetLeft( 180 );
 	self.labelRef:SetTextAlignment( Turbine.UI.ContentAlignment.MiddleRight );
-
-	-- self:SetMouseVisible( true );
+    self.labelRef:SetMultiline(false)
 end
 
 function StatNode:Refresh()
@@ -744,8 +146,9 @@ function StatNode:Refresh()
 	local stat = stats[self.key]
 
 	if stat ~= nil then
-		self.labelValue:SetText( stat:AsString() );
-		local diff = stat:DiffAsString();
+		self.labelValue:SetText( stat:AsString(player:GetLevel(), Settings.ShowPercentages) );
+		-- self.labelRef:SetText( stat:RefAsString(player:GetLevel(), Settings.ShowPercentages) );
+		local diff = stat:DiffAsString(player:GetLevel(), Settings.ShowPercentages)
 		if diff and diff ~= "" then
 			if diff:sub(1,1) == '-' then
 				self.labelRef:SetForeColor( Turbine.UI.Color(1.0, 0.6, 0.6) );
@@ -846,18 +249,7 @@ function BrowseWindow:Constructor()
 	-- Elements to share builds
 	-- ------------------------------------------------------------------------
 
-    self.sharewindow = StatShareWindow()
-
---[[
-    self.sharebtn = Turbine.UI.Lotro.Button();
-    self.sharebtn:SetParent(self)
-	self.sharebtn:SetText( "Share" );
-	self.sharebtn.MouseClick = function(sender, args)
-        local exposing = not self.sharewindow:IsVisible()
-        -- if exposing then self.sharewindow:Refresh() end
-        self.sharewindow:SetVisible(exposing)
-    end
-]]--
+    self.sharewindow = StatShareWindow(Settings)
 
 	-- ------------------------------------------------------------------------
 	-- Buttons
@@ -873,14 +265,27 @@ function BrowseWindow:Constructor()
 		end
 	end
 
-	self.modbtn = Utils.UI.DropDown({"T1", "T2"});
+    self.modifiers = {
+        ["T1"]       = SetModifierT1,
+        ["T2"]       = SetModifierT2,
+        ["T2 - 108"] = SetModifierT2,
+    }
+    self.references = {
+        [""]      = ClearReference,
+        ["Cap"]   = SetCapReference,
+        ["Set 1"] = function() SetReference(1) end,
+        ["Set 2"] = function() SetReference(2) end,
+        ["Set 3"] = function() SetReference(3) end,
+        ["Set 4"] = function() SetReference(4) end,
+    }
+
+	self.modbtn = Utils.UI.DropDown({"T1", "T2", "T2 - 108"});
 	self.modbtn:SetParent( self );
 	self.modbtn:SetText(Settings.Modifiers.Active);
 	self.modbtn.ItemChanged = function(sender, args) 
-		Settings.Modifiers.Active = self.modbtn:GetText()
-		if self.referencebtn:GetText() == "Cap" then
-		    SetCapReference()
-		end
+		self.modifiers[args.Text]()
+		if self.referencebtn.GetText() == "Cap" then SetCapReference() end
+		Settings.Modifiers.Active = args.Text
 		self:Refresh();
 		if self.sharewindow:IsVisible() then
 		    self.sharewindow:Refresh()
@@ -889,20 +294,22 @@ function BrowseWindow:Constructor()
 
 	self.formatbtn = Utils.UI.DropDown({"#", "%"});
 	self.formatbtn:SetParent( self );
-	self.formatbtn:SetText(percentages and "%" or "#");
+	self.formatbtn:SetText(Settings.ShowPercentages and "%" or "#");
 	self.formatbtn.ItemChanged = function(sender, args) 
-		percentages = (args.Index == 2)
+		Settings.ShowPercentages = (args.Index == 2)
 		self:Refresh();
 	end
 
-	self.referencebtn = Utils.UI.DropDown({"", "Set", "Cap"});
+	self.referencebtn = Utils.UI.DropDown({"", "Cap", "Set 1", "Set 2", "Set 3", "Set 4"});
 	self.referencebtn:SetParent( self );
 	self.referencebtn:SetText( "" );
 	self.referencebtn.ItemChanged = function(sender, args)
-		callbacks = { ClearReference, SetReference, SetCapReference };
-		callbacks[args.Index]();
+		self.references[args.Text]()
 		self:Refresh();
 	end
+
+    self.modifiers[Settings.Modifiers.Active]()
+    self.references[""]()
 
 	-- ------------------------------------------------------------------------
 	-- Fill in groups & stat nodes
@@ -958,25 +365,17 @@ function BrowseWindow:Constructor()
 				StatNode("Finesse", "Finesse"),
 				StatNode("Physical Mastery", "PhysMast"),
 				StatNode("Tactical Mastery", "TactMast"),
-				StatNode("- Outgoing Healing", "HealOut"),
+				StatNode("- Outgoing Healing", "OutHeals"),
 			}
 		)
 	);
 
-	--[[ nodes:Add(
-		StatGroup( "Healing",
-			{
-				StatNode("Outgoing", "HealOut"),
-			}
-		)
-	); ]]--
-
 	nodes:Add(
-		StatGroup( "Defences",
+		StatGroup( "Defence",
 			{
 				StatNode("Resistance"),
 				StatNode("Critical Defence", "CritDef"),
-				StatNode("Incoming Healing", "HealIn"),
+				StatNode("Incoming Healing", "IncHeals"),
 			}
 		)
 	);
@@ -988,7 +387,7 @@ function BrowseWindow:Constructor()
 				StatNode("Parry"),
 				StatNode("Evade"),
 				StatSep(),
-				StatNode("", "Avoidances"),
+				StatNode("", "BPEChance"),
 				StatSep(),
 				StatNode("Partial Block", "PartialBlock"),
 				StatNode("Partial Parry", "PartialParry"),
@@ -1113,6 +512,8 @@ function BrowseWindow:Refresh()
 
 	xDEBUG("BrowseWindow:Refresh")
 
+    stats:Refresh(player)
+
 	local nodes = self.statlist:GetNodes()
 	local count = nodes:GetCount();
 	for i = 1, count do
@@ -1137,7 +538,6 @@ function BrowseWindow:Unload()
 	Settings.ShareWindow  = self.sharewindow:Serialize()
     Settings.ShareWindow.Toggle = self.sharewindow.toggle:Serialize()
 
-	Settings.ShowPercentages = percentages;
 	Settings.ExpandedGroups = self.statlist:ExpandedGroups()
 
 	Settings.Modifiers.Active = self.modbtn:GetText()
@@ -1240,6 +640,9 @@ atexit(function() Turbine.Shell.RemoveCommand(_cmd) end)
 function RefreshHandler(sender, args)
 	if mainwnd:IsVisible() then mainwnd:Refresh() end
 	end
+
+local effects = player:GetEffects()
+local equip   = player:GetEquipment()
 
 local hooks = HookTable({
 	{ object = effects, event = "EffectAdded", callback = RefreshHandler },

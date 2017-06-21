@@ -2,6 +2,13 @@
 
 TODO:
 
+- Cap for Outgoing Healing: We probably don't implement this... Although
+  outgoing healing and tactical mastery have different cap rating, it might
+  be better to view outgoing heals as percentage.
+  
+  * Note: Partial BPE works the same. So it would be great to show the
+    "rate" as percentage, but still have a cap.
+
 - There are separate icons for Expand/Collapse all (++ and --). Find their
   IDs. Those icons should also contain non-focus / focus / pressed versions.
 
@@ -36,10 +43,6 @@ FIX:
 -------------------------------------------------------------------------------
 
 POSTPONED / IGNORED:
-
-- Cap for Outgoing Healing: We probably don't implement this... Although
-  outgoing healing and tactical mastery have different cap rating, it might
-  be better to view outgoing heals as percentage.
 
 -------------------------------------------------------------------------------
 
