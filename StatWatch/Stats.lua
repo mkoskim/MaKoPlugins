@@ -178,7 +178,7 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 
-local function FormatNumber(number, decimals)
+function FormatNumber(number, decimals)
     if number < 1000 then
         return string.format("%." .. tostring(decimals or 0) .. "f", number)
     elseif number < 150000 then
@@ -218,6 +218,14 @@ function StatEntry:Constructor(stats, key, rkey, pkey, rfmt)
     self.rkey = rkey and rkey or key
     self.pkey = pkey
     self.rfmt = rfmt and rfmt or function(self, R) return FormatNumber(R, 0) end
+end
+
+function StatEntry:GetLevel()
+    if self.stats.modifier.hidden.level then
+        return self.stats.modifier.hidden.level
+    else
+        return self.stats.player:GetLevel()
+    end
 end
 
 function StatEntry:GetRating(tbl, key, L)
@@ -261,7 +269,8 @@ function StatEntry:PercentAsString(L, p)
     end
 end
 
-function StatEntry:AsString(L, aspercent)
+function StatEntry:AsString(aspercent)
+    local L = self:GetLevel()
     if aspercent and self.pkey ~= nil then
         p = self:Percent(L)
         if p ~= nil then return self:PercentAsString(L, p) end
@@ -271,7 +280,8 @@ end
 
 -- ----------------------------------------------------------------------------
 
-function StatEntry:RefAsString(L, aspercent)
+function StatEntry:RefAsString(aspercent)
+    local L = self:GetLevel()
     if self:Rating(L) and self:RefRating(L) then
         if aspercent and self.pkey ~= nil then
             return self:PercentAsString(L, self:RefPercent(L))
@@ -283,7 +293,8 @@ function StatEntry:RefAsString(L, aspercent)
     end
 end
 
-function StatEntry:DiffAsString(L, aspercent)
+function StatEntry:DiffAsString(aspercent)
+    local L = self:GetLevel()
     local a, b
     if aspercent and self.pkey ~= nil then
         a = self:Percent(L)
@@ -305,6 +316,7 @@ end
 Stats = class()
 
 function Stats:Constructor(player)
+    self.player  = player
     self.ratings = Ratings(player)
     self.modifier = {
         visible = { },

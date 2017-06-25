@@ -146,9 +146,9 @@ function StatNode:Refresh()
 	local stat = stats[self.key]
 
 	if stat ~= nil then
-		self.labelValue:SetText( stat:AsString(player:GetLevel(), Settings.ShowPercentages) );
-		-- self.labelRef:SetText( stat:RefAsString(player:GetLevel(), Settings.ShowPercentages) );
-		local diff = stat:DiffAsString(player:GetLevel(), Settings.ShowPercentages)
+		self.labelValue:SetText( stat:AsString(Settings.ShowPercentages) );
+		-- self.labelRef:SetText( stat:RefAsString(Settings.ShowPercentages) );
+		local diff = stat:DiffAsString(Settings.ShowPercentages)
 		if diff and diff ~= "" then
 			if diff:sub(1,1) == '-' then
 				self.labelRef:SetForeColor( Turbine.UI.Color(1.0, 0.6, 0.6) );
@@ -249,7 +249,7 @@ function BrowseWindow:Constructor()
 	-- Elements to share builds
 	-- ------------------------------------------------------------------------
 
-    self.sharewindow = StatShareWindow(Settings)
+    self.sharewindow = StatShareWindow(Settings, stats)
 
 	-- ------------------------------------------------------------------------
 	-- Buttons

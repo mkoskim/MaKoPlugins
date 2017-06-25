@@ -8,6 +8,8 @@
 -- ****************************************************************************
 -- ****************************************************************************
 
+import "MaKoPlugins.StatWatch.Stats"
+
 StatShareGroup = class(Utils.UI.TreeGroup)
 
 function StatShareGroup:Constructor(name)
@@ -50,8 +52,14 @@ end
 
 StatShareWindow = class(Utils.UI.Window)
 
-function StatShareWindow:Constructor(Settings)
+function StatShareWindow:Constructor(Settings, stats)
 	Utils.UI.Window.Constructor(self);
+
+    -- ------------------------------------------------------------------------
+
+    self.stats = stats
+
+    -- ------------------------------------------------------------------------
 
 	self:SetText("Share stats");
 
@@ -135,7 +143,9 @@ function StatShareWindow:Constructor(Settings)
             Turbine.UI.Lotro.ShortcutType.Alias,
             string.format("%s Stats %s (%s @ %d):\n%s",
                 channel,
-                player:GetName(), Utils.ClassAsString[player:GetClass()], player:GetLevel(),
+                self.stats.player:GetName(),
+                Utils.ClassAsString[self.stats.player:GetClass()],
+                self.stats.player:GetLevel(),
                 text
             )
         ))
@@ -210,101 +220,102 @@ end
 
 function StatShareWindow:Refresh()
     self.groups["MoralePower"]:SetText(
-        string.format("Morale..: %s", stats["Morale"]:AsString()) .. "\n" ..
-        string.format("Power...: %s", stats["Power"]:AsString())
+        string.format("Morale..: %s", self.stats["Morale"]:AsString()) .. "\n" ..
+        string.format("Power...: %s", self.stats["Power"]:AsString())
     )
 
     self.groups["Regen"]:SetText(
         string.format("ICMR...: %s (%s / s)",
-            FormatNumber(stats["ICMR"]:Rating() * 60),
-            stats["ICMR"]:AsString()
+            FormatNumber(self.stats["ICMR"]:Rating() * 60),
+            self.stats["ICMR"]:AsString()
         )  .. "\n" ..
         string.format("ICPR....: %s (%s / s)",
-            FormatNumber(stats["ICPR"]:Rating() * 60),
-            stats["ICPR"]:AsString()
+            FormatNumber(self.stats["ICPR"]:Rating() * 60),
+            self.stats["ICPR"]:AsString()
         )
     )
 
     self.groups["BasicStats"]:SetText(
-        string.format("Might.....: %s", stats["Might"]:RatingAsString())  .. "\n" ..
-        string.format("Agility....: %s", stats["Agility"]:RatingAsString())  .. "\n" ..
-        string.format("Vitality...: %s", stats["Vitality"]:RatingAsString())  .. "\n" ..
-        string.format("Will........: %s", stats["Will"]:RatingAsString())  .. "\n" ..
-        string.format("Fate......: %s", stats["Fate"]:RatingAsString())
+        string.format("Might.....: %s", self.stats["Might"]:AsString())  .. "\n" ..
+        string.format("Agility....: %s", self.stats["Agility"]:AsString())  .. "\n" ..
+        string.format("Vitality...: %s", self.stats["Vitality"]:AsString())  .. "\n" ..
+        string.format("Will........: %s", self.stats["Will"]:AsString())  .. "\n" ..
+        string.format("Fate......: %s", self.stats["Fate"]:AsString())
     )
 
     self.groups["Offence"]:SetText(
         string.format("Critical Rating....: %s - %s",
-            stats["CritRate"]:RatingAsString(),
-            stats["CritRate"]:PercentAsString()
+            self.stats["CritRate"]:AsString(),
+            self.stats["CritRate"]:AsString(true)
         ) .. "\n" ..
         string.format("Finesse.............: %s - %s",
-            stats["Finesse"]:RatingAsString(),
-            stats["Finesse"]:PercentAsString()
+            self.stats["Finesse"]:AsString(),
+            self.stats["Finesse"]:AsString(true)
         ) .. "\n" ..
         string.format("Physical Mastery: %s - %s",
-            stats["PhysMast"]:RatingAsString(),
-            stats["PhysMast"]:PercentAsString()
+            self.stats["PhysMast"]:AsString(),
+            self.stats["PhysMast"]:AsString(true)
         ) .. "\n" ..
         string.format("Tactical Mastery: %s - %s",
-            stats["TactMast"]:RatingAsString(),
-            stats["TactMast"]:PercentAsString()
+            self.stats["TactMast"]:AsString(),
+            self.stats["TactMast"]:AsString(true)
         ) .. "\n" ..
         string.format("Outgoing Healing: %s",
-            stats["HealOut"]:RatingAsString()
+            self.stats["OutHeals"]:AsString(true)
         )
     )
 
     self.groups["Defence"]:SetText(
         string.format("Resistance........: %s - %s",
-            stats["Resistance"]:RatingAsString(),
-            stats["Resistance"]:PercentAsString()
+            self.stats["Resistance"]:AsString(),
+            self.stats["Resistance"]:AsString(true)
         ) .. "\n" ..
         string.format("Critical Defence.: %s - %s",
-            stats["CritDef"]:RatingAsString(),
-            stats["CritDef"]:PercentAsString()
+            self.stats["CritDef"]:AsString(),
+            self.stats["CritDef"]:AsString(true)
         ) .. "\n" ..
         string.format("Incoming Healing: %s - %s",
-            stats["HealIn"]:RatingAsString(),
-            stats["HealIn"]:PercentAsString()
+            self.stats["IncHeals"]:AsString(),
+            self.stats["IncHeals"]:AsString(true)
         )
     )
 
     self.groups["Avoidance"]:SetText(
         string.format("Block.: %s - %s",
-            stats["Block"]:RatingAsString(),
-            stats["Block"]:PercentAsString()
+            self.stats["Block"]:AsString(),
+            self.stats["Block"]:AsString(true)
         ) .. "\n" ..
         string.format("Parry.: %s - %s",
-            stats["Parry"]:RatingAsString(),
-            stats["Parry"]:PercentAsString()
+            self.stats["Parry"]:AsString(),
+            self.stats["Parry"]:AsString(true)
         ) .. "\n" ..
         string.format("Evade: %s - %s",
-            stats["Evade"]:RatingAsString(),
-            stats["Evade"]:PercentAsString()
+            self.stats["Evade"]:AsString(),
+            self.stats["Evade"]:AsString(true)
         )
-        .. "\n\n" ..
-        string.format("BPE (Full): %s", stats["Avoidances"]:RatingAsString())
+        --[[.. "\n\n" ..
+        string.format("BPE (Full): %s", self.stats["Avoidances"]:AsString())
         .. "\n" ..
-        string.format("BPE (Partial): %s", stats["Partials"]:RatingAsString())
+        string.format("BPE (Partial): %s", self.stats["Partials"]:AsString())
         .. "\n" ..
         string.format("Avoid Chance: %s",
-            stats["AvoidChance"]:RatingAsString()
+            self.stats["AvoidChance"]:RatingAsString()
         )
+        --]]
     )
 
     self.groups["Mitigations"]:SetText(
         string.format("Phys. Mitigation..: %s - %s",
-            stats["CommonMit"]:RatingAsString(),
-            stats["CommonMit"]:PercentAsString()
+            self.stats["CommonMit"]:AsString(),
+            self.stats["CommonMit"]:AsString(true)
         ) .. "\n" ..
         string.format("Tact. Mitigation..: %s - %s",
-            stats["TactMit"]:RatingAsString(),
-            stats["TactMit"]:PercentAsString()
+            self.stats["TactMit"]:AsString(),
+            self.stats["TactMit"]:AsString(true)
         ) .. "\n" ..
         string.format("OC/FW Mitigation: %s - %s",
-            stats["PhysMit"]:RatingAsString(),
-            stats["PhysMit"]:PercentAsString()
+            self.stats["PhysMit"]:AsString(),
+            self.stats["PhysMit"]:AsString(true)
         )
     )
 end

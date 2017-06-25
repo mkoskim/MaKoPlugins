@@ -236,11 +236,11 @@ function DropDown.Constructor(sender, _list, defaultLabel)
 	AddCallback(ddLabelContainer,"MouseLeave",controlLeave);
 
 	local controlDown = function ()
-	    ddListContainer:SetPosition(ddLabelContainer:PointToScreen(0,ddLabelContainer:GetHeight()-2));
-	    ddLabelContainer:RescaleList();
-	    ddListContainer:SetVisible(true);
-	    ddListContainer:Activate();
-	    ddListContainer:Focus();
+        ddListContainer:SetPosition(ddLabelContainer:PointToScreen(0,ddLabelContainer:GetHeight()-2));
+        ddLabelContainer:RescaleList();
+        ddListContainer:SetVisible(true);
+        ddListContainer:Activate();
+        ddListContainer:Focus();
 	end
 	AddCallback(ddLabelContainer,"MouseDown",controlDown);
 
