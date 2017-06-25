@@ -138,6 +138,12 @@ local segments = {
 	["CritDef"] = { Segment(nil, nil, 0, 50, 1.00, 100.0, 0.0), },
 	["Finesse"] = { Segment(nil, nil, 0, 50, 1.00, 400.0, 0.0), },
 
+	["OutHeals"] = {
+	    Segment( 20, 30,  0, 30, 0.43, 171.5,      0.0),
+	    Segment( 50, 50,  0, 50, 1.00, 400.0,      0.0),
+	    Segment(nil, 70,  0, 70, 1.40, 777.0, -10850.0),
+	},
+
 --[[
 	["OutHeals"] = {
 		Segment(30, 100.0, 1190/3.0, 50),

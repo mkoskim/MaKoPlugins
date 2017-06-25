@@ -69,22 +69,29 @@ player.attr   = player:GetAttributes();
 
 local stats = Stats(player)
 
-local function SetReference()
-    stats.reference = { }
-    for key, value in pairs(stats.ratings) do
-        stats.reference[key] = value
-    end
-end
-
-local function SetCapReference()
-    stats.reference = CapRatings(player:GetLevel(), ArmorType[player:GetClass()])
-    Ratings.sub(stats.reference, stats.modifier.hidden)
-    -- dumptable(stats.reference)
-end
+-- ----------------------------------------------------------------------------
 
 local function ClearReference()
     stats.reference = { }
 end
+
+local function StoreReference(index)
+    stats.stored[index] = stats.ratings:copy()
+end
+
+local function SetReference(index)
+    if stats.stored[index] == nil then
+        StoreReference(index)
+    end
+    stats.reference = stats.stored[index]
+end
+
+local function SetReferenceCap()
+    stats.reference = CapRatings(player:GetLevel(), ArmorType[player:GetClass()])
+    Ratings.sub(stats.reference, stats.modifier.hidden)
+end
+
+-- ----------------------------------------------------------------------------
 
 local function SetModifierT1()
     stats.modifier.hidden = { }
@@ -255,9 +262,9 @@ function BrowseWindow:Constructor()
 	-- Buttons
 	-- ------------------------------------------------------------------------
 
-	self.refreshbtn = Turbine.UI.Lotro.Button();
+	self.refreshbtn = Utils.UI.TextButton()
 	self.refreshbtn:SetParent( self );
-	self.refreshbtn:SetText( "Refresh" );
+	self.refreshbtn:SetText( "R" );
 	self.refreshbtn.Click = function() 
 		self:Refresh();
 		if self.sharewindow:IsVisible() then
@@ -268,18 +275,9 @@ function BrowseWindow:Constructor()
     self.modifiers = {
         ["T1"]       = SetModifierT1,
         ["T2"]       = SetModifierT2,
-        ["T2 - 108"] = SetModifierT2,
-    }
-    self.references = {
-        [""]      = ClearReference,
-        ["Cap"]   = SetCapReference,
-        ["Set 1"] = function() SetReference(1) end,
-        ["Set 2"] = function() SetReference(2) end,
-        ["Set 3"] = function() SetReference(3) end,
-        ["Set 4"] = function() SetReference(4) end,
     }
 
-	self.modbtn = Utils.UI.DropDown({"T1", "T2", "T2 - 108"});
+	self.modbtn = Utils.UI.DropDown({"T1", "T2"});
 	self.modbtn:SetParent( self );
 	self.modbtn:SetText(Settings.Modifiers.Active);
 	self.modbtn.ItemChanged = function(sender, args) 
@@ -292,24 +290,48 @@ function BrowseWindow:Constructor()
 		end
 	end
 
-	self.formatbtn = Utils.UI.DropDown({"#", "%"});
-	self.formatbtn:SetParent( self );
-	self.formatbtn:SetText(Settings.ShowPercentages and "%" or "#");
-	self.formatbtn.ItemChanged = function(sender, args) 
-		Settings.ShowPercentages = (args.Index == 2)
-		self:Refresh();
-	end
-
 	self.referencebtn = Utils.UI.DropDown({"", "Cap", "Set 1", "Set 2", "Set 3", "Set 4"});
 	self.referencebtn:SetParent( self );
 	self.referencebtn:SetText( "" );
+    ClearReference()
 	self.referencebtn.ItemChanged = function(sender, args)
-		self.references[args.Text]()
+	    local index = self.referencebtn:GetText()
+	    if index == "" then
+	        ClearReference()
+	    elseif index == "Cap" then
+	        SetReferenceCap()
+	    else
+	        SetReference(index)
+	    end
 		self:Refresh();
 	end
 
+	self.setbtn = Utils.UI.TextButton();
+	self.setbtn:SetParent( self );
+	self.setbtn:SetText("S");
+	self.setbtn.Click = function(sender, args) 
+	    local index = self.referencebtn:GetText()
+	    if index == "" or index == "Cap" then
+	        return
+	    else
+	        StoreReference(index)
+	        SetReference(index)
+	    end
+		self:Refresh();
+	end
+
+	self.formatbtn = Utils.UI.TextButton();
+	self.formatbtn:SetParent( self );
+	self.formatbtn:SetText(Settings.ShowPercentages and "%" or "#");
+	self.formatbtn.Click = function(sender, args) 
+		Settings.ShowPercentages = not Settings.ShowPercentages
+		self.formatbtn:SetText(Settings.ShowPercentages and "%" or "#")
+		self:Refresh();
+	end
+
+	-- ------------------------------------------------------------------------
+
     self.modifiers[Settings.Modifiers.Active]()
-    self.references[""]()
 
 	-- ------------------------------------------------------------------------
 	-- Fill in groups & stat nodes
@@ -472,27 +494,33 @@ function BrowseWindow:SizeChanged( sender, args )
 
     -- ------------------------------------------------------------------------
 
-	self.refreshbtn:SetSize( 60, 20 );
+	self.refreshbtn:SetSize( 20, 20 );
 	self.refreshbtn:SetPosition(
 		30 + 0,
 		self:GetHeight() - 32
 	);
 
-	self.modbtn:SetWidth(60);
+	self.modbtn:SetWidth(80);
 	self.modbtn:SetPosition(
-	    30 + 65,
+	    30 + 25,
 	    self:GetHeight() - 32
 	);
     
-	self.referencebtn:SetWidth(60);
+	self.referencebtn:SetWidth(90);
 	self.referencebtn:SetPosition(
-		40 + 120,
+		30 + 25 + 80 + 5,
 		self:GetHeight() - 32
 	);
 
-	self.formatbtn:SetWidth(60);
+	self.setbtn:SetSize(20, 20);
+	self.setbtn:SetPosition(
+		self:GetWidth()  - 50 - 25,
+		self:GetHeight() - 32
+	);
+
+	self.formatbtn:SetSize(20, 20);
 	self.formatbtn:SetPosition(
-		40 + 180,
+		self:GetWidth()  - 50,
 		self:GetHeight() - 32
 	);
 

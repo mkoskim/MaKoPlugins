@@ -77,6 +77,24 @@ function Ratings:Refresh(player)
     self["CommonMit"]  = player.attr:GetCommonMitigation()
     self["PhysMit"]    = player.attr:GetPhysicalMitigation()
     self["TactMit"]    = player.attr:GetTacticalMitigation()
+
+    self["ID"] = {
+        Name      = player:GetName(),
+        Class     = player:GetClass(),
+        ArmorType = ArmorType[player:GetClass()],
+        Level     = player:GetLevel(),
+    }
+end
+
+-- ----------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------
+
+function Ratings:copy()
+    local r = { }
+    for key, value in pairs(self) do
+        r[key] = value
+    end
+    return r
 end
 
 -- ----------------------------------------------------------------------------
@@ -158,6 +176,11 @@ function CapRatings(L, armortype)
         CommonMit = ratingCap(armortype, L),
         PhysMit   = ratingCap(armortype, L),
         TactMit   = ratingCap(armortype, L),
+
+        ID = {
+            ArmorType = armortype,
+            Level     = L,
+        },
     }
 end
 
@@ -172,6 +195,10 @@ function T2Modifiers(L)
         Block      = -40 * L,
         Parry      = -40 * L,
         Evade      = -40 * L,
+
+        ID = {
+            Level     = L,
+        },
     }
 end
 
@@ -324,6 +351,7 @@ function Stats:Constructor(player)
     }
 
     self.reference = { }
+    self.stored = { }
     self.ckey = { }
 
     -- ------------------------------------------------------------------------

@@ -80,8 +80,9 @@ function DropDown.Constructor(sender, _list, defaultLabel)
 	local lblSelected = Turbine.UI.Label();
 	lblSelected:SetParent(ddLabelBack);
 	lblSelected:SetSize(ddLabelBack:GetWidth()-15,ddLabelBack:GetHeight());
+	lblSelected:SetPosition(5, 0);
 	lblSelected:SetForeColor(Turbine.UI.Color((229/255),(209/255),(136/255)));
-	lblSelected:SetTextAlignment(Turbine.UI.ContentAlignment.MiddleCenter);
+	lblSelected:SetTextAlignment(Turbine.UI.ContentAlignment.MiddleLeft);
 	lblSelected:SetFont(Turbine.UI.Lotro.Font.TrajanPro14);
 	lblSelected:SetMultiline(false);
 	lblSelected:SetMouseVisible(false);
@@ -148,8 +149,9 @@ function DropDown.Constructor(sender, _list, defaultLabel)
 			local lblItem = Turbine.UI.Label();
 			lblItem:SetParent(cItemContainer);
 			lblItem:SetSize(cItemContainer:GetSize());
+			lblItem:SetPosition(5, 0);
 			lblItem:SetFont(Turbine.UI.Lotro.Font.TrajanPro14);
-			lblItem:SetTextAlignment(Turbine.UI.ContentAlignment.MiddleCenter);
+			lblItem:SetTextAlignment(Turbine.UI.ContentAlignment.MiddleLeft);
 			lblItem:SetMultiline(false);
 			lblItem:SetMouseVisible(false);
 			lblItem:SetText(v);
