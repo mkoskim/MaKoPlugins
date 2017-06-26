@@ -37,6 +37,9 @@ ArmorType = {
 -- later comparisons. Also, this can be used to store modifiers, and then
 -- later add them to ratings.
 --
+-- Even thought certain stats are derived from same ratings, we store the
+-- them as separate entries. This is because e.g. cap ratings are different.
+--
 -- ****************************************************************************
 -- ****************************************************************************
 
@@ -60,6 +63,8 @@ function Ratings:Refresh(player)
     self["Fate"]       = player.attr:GetFate()
 
     self["CritRate"]   = player.attr:GetBaseCriticalHitChance()
+    self["CritMag"]    = self.CritRate
+    self["DevRate"]    = self.CritRate
     
     self["Finesse"]    = player.attr:GetFinesse()
     self["PhysMast"]   = math.max(player.attr:GetMeleeDamage(), player.attr:GetRangeDamage())
@@ -73,6 +78,14 @@ function Ratings:Refresh(player)
     self["Block"]      = player.attr:CanBlock() and player.attr:GetBlock() or nil
     self["Parry"]      = player.attr:CanParry() and player.attr:GetParry() or nil
     self["Evade"]      = player.attr:CanEvade() and player.attr:GetEvade() or nil
+
+    self["PartialBlock"] = self.Block
+    self["PartialParry"] = self.Parry
+    self["PartialEvade"] = self.Evade    
+
+    self["PartialBlockMit"] = self.Block
+    self["PartialParryMit"] = self.Parry
+    self["PartialEvadeMit"] = self.Evade    
 
     self["CommonMit"]  = player.attr:GetCommonMitigation()
     self["PhysMit"]    = player.attr:GetPhysicalMitigation()
@@ -195,12 +208,20 @@ function T2Modifiers(L)
 
         Resistance = -90 * L,
         
-        Block      = -40 * L,
-        Parry      = -40 * L,
-        Evade      = -40 * L,
+        Block = -40 * L,
+        Parry = -40 * L,
+        Evade = -40 * L,
+
+        PartialBlock = -40 * L,
+        PartialParry = -40 * L,
+        PartilaEvade = -40 * L,
+
+        PartialBlockMit = -40 * L,
+        PartialParryMit = -40 * L,
+        PartilaEvadeMit = -40 * L,
 
         ID = {
-            Level     = L,
+            Level = L,
         },
     }
 end
@@ -213,48 +234,6 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 
--- ----------------------------------------------------------------------------
--- StatEntry holds information of how to fetch ratings, and how to convert
--- them to percentages.
--- ----------------------------------------------------------------------------
-
-local StatEntry = class()
-
-function StatEntry:Constructor(stats, key, rkey, pkey)
-    self.stats = stats
-    self.stats[key] = self
-    self.key  = key
-    self.rkey = rkey and rkey or key
-    self.pkey = pkey
-end
-
-function StatEntry:GetRating(tbl, key, L)
-    local R
-    if type(key) == "function" then
-        R = key(tbl, L)
-    else
-        R = tbl[key]
-    end
-    if R ~= nil and self.stats.modifier.visible[key] then R = R + self.stats.modifier.visible[key] end
-    return R
-end
-
-function StatEntry:GetPercent(tbl, key, L)
-    local R = self:GetRating(tbl, key, L)
-    if R ~= nil and self.stats.modifier.hidden[key] then
-        R = R + self.stats.modifier.hidden[key]
-        R = math.max(R, 0.0)
-    end
-    return ratingToPercentage(self.pkey, R, L)
-end
-
-function StatEntry:Rating(L)     return self:GetRating(self.stats.ratings, self.rkey, L) end
-function StatEntry:Percent(L)    return self:GetPercent(self.stats.ratings, self.rkey, L) end
-function StatEntry:RefRating(L)  return self:GetRating(self.stats.reference, self.key, L) end
-function StatEntry:RefPercent(L) return self:GetPercent(self.stats.reference, self.key, L) end
-
--- ----------------------------------------------------------------------------
-
 Stats = class()
 
 function Stats:Constructor(player)
@@ -266,63 +245,54 @@ function Stats:Constructor(player)
     }
 
     self.reference = { }
-    self.stored = { }
-    self.ckey = { }
 
     -- ------------------------------------------------------------------------
 
-    StatEntry(self, "Morale")
-    StatEntry(self, "Power")
-    StatEntry(self, "ICMR")
-    StatEntry(self, "ICPR")
+    self.pkeys = {
+        Block = "BPE",
+        Parry = "BPE",
+        Evade = "BPE",
 
-    StatEntry(self, "Armor")
-    StatEntry(self, "Might")
-    StatEntry(self, "Agility")
-    StatEntry(self, "Vitality")
-    StatEntry(self, "Will")
-    StatEntry(self, "Fate")
-    
-    StatEntry(self, "CritRate", "CritRate", "CritRate")
-    StatEntry(self, "CritMag",  "CritRate", "CritMag")
-    StatEntry(self, "DevRate",  "CritRate", "DevRate")
+        PartialBlock = "PartialBPE",
+        PartialParry = "PartialBPE",
+        PartialEvade = "PartialBPE",
 
-    StatEntry(self, "Finesse",  nil, "Finesse")
-    StatEntry(self, "PhysMast", nil, "Mastery")
-    StatEntry(self, "TactMast", nil, "Mastery")
-    StatEntry(self, "OutHeals", nil, "OutHeals")
+        PartialBlockMit = "PartialBPEMit",
+        PartialParryMit = "PartialBPEMit",
+        PartialEvadeMit = "PartialBPEMit",
 
-    StatEntry(self, "Resistance", nil, "Resistance")
-    StatEntry(self, "CritDef", nil, "CritDef")
-    StatEntry(self, "IncHeals", nil, "IncHeals")
-
-    StatEntry(self, "Block", nil, "BPE")
-    StatEntry(self, "Parry", nil, "BPE")
-    StatEntry(self, "Evade", nil, "BPE")
-
-    StatEntry(self, "PartialBlock", "Block", "PartialBPE")
-    StatEntry(self, "PartialParry", "Parry", "PartialBPE")
-    StatEntry(self, "PartialEvade", "Evade", "PartialBPE")
-
-    StatEntry(self, "PartialBlockMit", "Block", "PartialBPEMit")
-    StatEntry(self, "PartialParryMit", "Parry", "PartialBPEMit")
-    StatEntry(self, "PartialEvadeMit", "Evade", "PartialBPEMit")
-
-    StatEntry(self, "CommonMit", nil, self.ratings.ID.ArmorType)
-    StatEntry(self, "PhysMit",   nil, self.ratings.ID.ArmorType)
-    StatEntry(self, "TactMit",   nil, self.ratings.ID.ArmorType)
-
-    -- ------------------------------------------------------------------------
-
-    -- self["BPEChance"] = StatEntry(self, self.FullBPERate, nil, function(self, R) return FormatPercent(R) end)
+        CommonMit = self.ratings.ID.ArmorType,
+        PhysMit   = self.ratings.ID.ArmorType,
+        TactMit   = self.ratings.ID.ArmorType,
+    }
 end
 
-function Stats:FullBPERate(L)
-    return
-        self["Block"]:Percent(L) +
-        self["Parry"]:Percent(L) +
-        self["Evade"]:Percent(L)
+-- ----------------------------------------------------------------------------
+
+function Stats:GetRating(tbl, key, L)
+    local R = tbl[key]
+    if R ~= nil and self.modifier.visible[key] then
+        R = R + self.modifier.visible[key]
+    end
+    return R
 end
+
+function Stats:GetPercent(tbl, key, L)
+    local R = self:GetRating(tbl, key, L)
+    if R ~= nil and self.modifier.hidden[key] then
+        R = R + self.modifier.hidden[key]
+        R = math.max(R, 0.0)
+    end
+    local pkey = self.pkeys[key]
+    return ratingToPercentage(pkey and pkey or key, R, L)
+end
+
+function Stats:Rating(key, L)     return self:GetRating(self.ratings,    key, L) end
+function Stats:Percent(key, L)    return self:GetPercent(self.ratings,   key, L) end
+function Stats:RefRating(key, L)  return self:GetRating(self.reference,  key, L) end
+function Stats:RefPercent(key, L) return self:GetPercent(self.reference, key, L) end
+
+-- ----------------------------------------------------------------------------
 
 function Stats:GetLevel()
     if self.reference and self.reference.ID then

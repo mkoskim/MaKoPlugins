@@ -142,7 +142,7 @@ function StatNode:Constructor(text, key, rfmt)
 	Utils.UI.TreeNode.Constructor( self );
 
 	self.text  = text
-    self.key   = key ~= nil and key or text
+    self.key   = key and key or text
     self.rfmt  = rfmt and rfmt or FormatNumber 
 
 	self:SetSize( 240, 16 );
@@ -197,10 +197,10 @@ end
 function StatNode:AsString()
     local L = self:GetLevel()
     if Settings.ShowPercentages then
-        local p = stats[self.key]:Percent(L)
+        local p = stats:Percent(self.key, L)
         if p ~= nil then return self:PercentAsString(L, p) end
     end
-    local R = stats[self.key]:Rating(L)
+    local R = stats:Rating(self.key, L)
     if R ~= nil then return self:RatingAsString(L, R) end
     return "-"
 end
@@ -209,28 +209,30 @@ function StatNode:RefAsString()
     local L = self:GetLevel()
 
     if Settings.ShowPercentages then
-        p = stats[self.key]:RefPercent(L)
+        p = stats:RefPercent(self.key, L)
         if p ~= nil then return self:PercentAsString(L, p) end
     end
-    return self:RatingAsString(L, stats[self.key]:RefRating(L))
+    return self:RatingAsString(L, stats:RefRating(self.key, L))
 end
 
-function StatNode:DiffAsString(aspercent)
+function StatNode:DiffAsString()
     local L = self:GetLevel()
-    local a, b
+
     if Settings.ShowPercentages then
-        a = stats[self.key]:Percent(L)
-        b = stats[self.key]:RefPercent(L)
-        if a ~= nil and b ~= nil and (math.abs(a - b) > 0.05) then
-            return self:PercentAsString(L, a - b)
+        local a = stats:Percent(self.key, L)
+        local b = stats:RefPercent(self.key, L)
+        if a ~= nil and b ~= nil then
+            if math.abs(a - b) > 0.05 then return self:PercentAsString(L, a - b) end
+            return nil
         end
     end
 
-    a = stats[self.key]:Rating(L)
-    b = stats[self.key]:RefRating(L)
+    local a = stats:Rating(self.key, L)
+    local b = stats:RefRating(self.key, L)
 
-    if a ~= nil and b ~= nil and (math.abs(a - b) > 0.05) then
-        return self:RatingAsString(L, a - b)
+    if a ~= nil and b ~= nil then
+        if math.abs(a - b) > 0.05 then return self:RatingAsString(L, a - b) end
+        return nil
     end
     return nil
 end
@@ -240,7 +242,7 @@ end
 function StatNode:Refresh()
 	xDEBUG("Updating: " .. self.key)
 
-    if stats[self.key] then
+    if stats.ratings[self.key] then
 	    self.labelValue:SetText( self:AsString(Settings.ShowPercentages) );
 	    -- self.labelRef:SetText( stat:RefAsString(Settings.ShowPercentages) );
 	    local diff = self:DiffAsString(Settings.ShowPercentages)
@@ -361,8 +363,8 @@ function BrowseWindow:Constructor()
 	end
 
     self.modifiers = {
-        ["T1"]       = SetModifierT1,
-        ["T2"]       = SetModifierT2,
+        ["T1"] = SetModifierT1,
+        ["T2"] = SetModifierT2,
     }
 
 	self.modbtn = Utils.UI.DropDown({"T1", "T2"});
@@ -370,7 +372,7 @@ function BrowseWindow:Constructor()
 	self.modbtn:SetText(Settings.Modifiers.Active);
 	self.modbtn.ItemChanged = function(sender, args) 
 		self.modifiers[args.Text]()
-		if self.referencebtn.GetText() == "Cap" then SetCapReference() end
+		if self.referencebtn:GetText() == "Cap" then SetReferenceCap() end
 		Settings.Modifiers.Active = args.Text
 		self:Refresh();
 		if self.sharewindow:IsVisible() then
