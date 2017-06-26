@@ -39,7 +39,10 @@ function Migrate(Settings, DefaultSettings)
         Settings.SettingsVersion = 3
     end
 
-    Settings.Modifiers.T2 = DefaultSettings.Modifiers.T2
+    if Settings["SettingsVersion"] == 3 then
+        Settings.References = DefaultSettings.References
+        Settings.SettingsVersion = 4
+    end
 
     return Settings
 end

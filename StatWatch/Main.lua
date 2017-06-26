@@ -30,7 +30,7 @@ import "MaKoPlugins.StatWatch.ShareWindow"
 local Settings = Migrate(
     PlugIn:LoadSettings("StatWatchSettings"),
     {
-        SettingsVersion = 3,
+        SettingsVersion = 4,
 
         ExpandedGroups = { },
         ShowPercentages = true,
@@ -55,7 +55,10 @@ local Settings = Migrate(
         
         Modifiers = {
             Active = "T1",
-        }
+        },
+        
+        References = {
+        },
     }
 )
 
@@ -65,7 +68,8 @@ local Settings = Migrate(
 local player  = Turbine.Gameplay.LocalPlayer:GetInstance();
 player.attr   = player:GetAttributes();
 
--- ----------------------------------------------------------------------------
+-- ****************************************************************************
+-- ****************************************************************************
 
 local stats = Stats(player)
 
@@ -76,14 +80,14 @@ local function ClearReference()
 end
 
 local function StoreReference(index)
-    stats.stored[index] = stats.ratings:copy()
+    Settings.References[index] = stats.ratings:copy()
 end
 
 local function SetReference(index)
-    if stats.stored[index] == nil then
+    if Settings.References[index] == nil then
         StoreReference(index)
     end
-    stats.reference = stats.stored[index]
+    stats.reference = Settings.References[index]
 end
 
 local function SetReferenceCap()
@@ -109,18 +113,37 @@ end
 -- ****************************************************************************
 -- ****************************************************************************
 
+local function FormatNumber(number, decimals)
+    if number < 1000 then
+        return string.format("%." .. tostring(decimals or 0) .. "f", number)
+    elseif number < 150000 then
+        return string.format("%d,%03d", (number+0.5)/1000, (number+0.5)%1000)
+    elseif number < 1000000 then
+        return string.format("%.1fk", (number+0.5)/1000)
+    elseif number < 1500000 then
+        return string.format("%d,%03.1fk", (number+0.5)/1000000, ((number+0.5)%1000000)/1000)
+    else
+        return string.format("%.2fM", number/1e6)
+    end
+end
+
+local function FormatPercent(value) return string.format("%.1f %%", value) end
+local function FormatPercentDiff(value) return string.format("%+.1f %%", value) end
+local function FormatELM(value) return string.format("x %3.1f", value) end
+
 -- ----------------------------------------------------------------------------
 -- Stat Node (stat line in listbox)
 -- ----------------------------------------------------------------------------
 
 local StatNode = class( Utils.UI.TreeNode )
 
-function StatNode:Constructor( text, key )
+function StatNode:Constructor(text, key, rfmt)
 
 	Utils.UI.TreeNode.Constructor( self );
 
 	self.text  = text
     self.key   = key ~= nil and key or text
+    self.rfmt  = rfmt and rfmt or FormatNumber 
 
 	self:SetSize( 240, 16 );
 
@@ -147,28 +170,93 @@ function StatNode:Constructor( text, key )
     self.labelRef:SetMultiline(false)
 end
 
+-- ----------------------------------------------------------------------------
+
+function StatNode:RatingAsString(L, R)
+    if R ~= nil then
+        return self.rfmt(R)
+    else
+        return nil
+    end
+end
+
+function StatNode:PercentAsString(L, p)
+    if p ~= nil then
+        return FormatPercent(p)
+    else
+        return nil
+    end
+end
+
+-- ----------------------------------------------------------------------------
+
+function StatNode:GetLevel()
+    return stats:GetLevel()
+end
+
+function StatNode:AsString()
+    local L = self:GetLevel()
+    if Settings.ShowPercentages then
+        local p = stats[self.key]:Percent(L)
+        if p ~= nil then return self:PercentAsString(L, p) end
+    end
+    local R = stats[self.key]:Rating(L)
+    if R ~= nil then return self:RatingAsString(L, R) end
+    return "-"
+end
+
+function StatNode:RefAsString()
+    local L = self:GetLevel()
+
+    if Settings.ShowPercentages then
+        p = stats[self.key]:RefPercent(L)
+        if p ~= nil then return self:PercentAsString(L, p) end
+    end
+    return self:RatingAsString(L, stats[self.key]:RefRating(L))
+end
+
+function StatNode:DiffAsString(aspercent)
+    local L = self:GetLevel()
+    local a, b
+    if Settings.ShowPercentages then
+        a = stats[self.key]:Percent(L)
+        b = stats[self.key]:RefPercent(L)
+        if a ~= nil and b ~= nil and (math.abs(a - b) > 0.05) then
+            return self:PercentAsString(L, a - b)
+        end
+    end
+
+    a = stats[self.key]:Rating(L)
+    b = stats[self.key]:RefRating(L)
+
+    if a ~= nil and b ~= nil and (math.abs(a - b) > 0.05) then
+        return self:RatingAsString(L, a - b)
+    end
+    return nil
+end
+
+-- ----------------------------------------------------------------------------
+
 function StatNode:Refresh()
 	xDEBUG("Updating: " .. self.key)
 
-	local stat = stats[self.key]
-
-	if stat ~= nil then
-		self.labelValue:SetText( stat:AsString(Settings.ShowPercentages) );
-		-- self.labelRef:SetText( stat:RefAsString(Settings.ShowPercentages) );
-		local diff = stat:DiffAsString(Settings.ShowPercentages)
-		if diff and diff ~= "" then
-			if diff:sub(1,1) == '-' then
-				self.labelRef:SetForeColor( Turbine.UI.Color(1.0, 0.6, 0.6) );
-			else
-				self.labelRef:SetForeColor( Turbine.UI.Color(0.6, 1.0, 0.6) );
-				if diff:sub(1,1) ~= '+' then diff = "+" .. diff end
-			end
-		end
-		self.labelRef:SetText( diff );
-	else
-		self.labelValue:SetText( "N/A" );
-		self.labelRef:SetText( "" );
-	end
+    if stats[self.key] then
+	    self.labelValue:SetText( self:AsString(Settings.ShowPercentages) );
+	    -- self.labelRef:SetText( stat:RefAsString(Settings.ShowPercentages) );
+	    local diff = self:DiffAsString(Settings.ShowPercentages)
+	    if diff and diff ~= "" then
+		    if diff:sub(1,1) == '-' then
+			    self.labelRef:SetForeColor( Turbine.UI.Color(1.0, 0.6, 0.6) );
+		    else
+			    self.labelRef:SetForeColor( Turbine.UI.Color(0.6, 1.0, 0.6) );
+			    if diff:sub(1,1) ~= '+' then diff = "+" .. diff end
+		    end
+	    end
+	    self.labelRef:SetText( diff );
+    else
+        self.labelValue:SetText("N/A")
+        self.labelRef:SetText("")
+    end
 end
 
 -- ----------------------------------------------------------------------------

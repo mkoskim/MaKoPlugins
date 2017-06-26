@@ -87,6 +87,8 @@ function Ratings:Refresh(player)
 end
 
 -- ----------------------------------------------------------------------------
+-- Make a (shallow) copy from ratings: especially, ID block will be copied
+-- as reference.
 -- ----------------------------------------------------------------------------
 
 function Ratings:copy()
@@ -98,12 +100,14 @@ function Ratings:copy()
 end
 
 -- ----------------------------------------------------------------------------
--- Adding ratings together. This does not add fields to original ratings
+-- Adding ratings together. This does not add new fields to original ratings
 -- ----------------------------------------------------------------------------
 
 function Ratings:add(ratings)
     for key, value in pairs(self) do
-        if ratings[key] ~= nil then self[key] = value + ratings[key] end
+        if ratings[key] ~= nil then
+            if type(ratings[key]) == "number" then self[key] = value + ratings[key] end
+        end
     end
 end
 
@@ -114,7 +118,7 @@ end
 function Ratings:combine(ratings)
     for key, value in pairs(ratings) do
         if self[key] ~= nil then
-            self[key] = value + ratings[key]
+            if type(self[key]) == "number" then self[key] = value + ratings[key] end
         else
             self[key] = ratings[key]
         end
@@ -127,7 +131,9 @@ end
 
 function Ratings:sub(ratings)
     for key, value in pairs(self) do
-        if ratings[key] ~= nil then self[key] = value - ratings[key] end
+        if ratings[key] ~= nil then
+            if type(self[key]) == "number" then self[key] = value - ratings[key] end
+        end
     end
 end
 
@@ -138,15 +144,12 @@ end
 function Ratings:diff(ratings)
     for key, value in pairs(self) do
         if ratings[key] ~= nil then
-            self[key] = value - ratings[key]
+            if type(self[key]) == "number" then self[key] = value - ratings[key] end
         else
             self[key] = nil
         end
     end
 end
-
--- ****************************************************************************
--- ****************************************************************************
 
 -- ****************************************************************************
 -- ****************************************************************************
@@ -204,27 +207,6 @@ end
 
 -- ****************************************************************************
 -- ****************************************************************************
-
-function FormatNumber(number, decimals)
-    if number < 1000 then
-        return string.format("%." .. tostring(decimals or 0) .. "f", number)
-    elseif number < 150000 then
-        return string.format("%d,%03d", (number+0.5)/1000, (number+0.5)%1000)
-    elseif number < 1000000 then
-        return string.format("%.1fk", (number+0.5)/1000)
-    elseif number < 1500000 then
-        return string.format("%d,%03.1fk", (number+0.5)/1000000, ((number+0.5)%1000000)/1000)
-    else
-        return string.format("%.2fM", number/1e6)
-    end
-end
-
-local function FormatPercent(value) return string.format("%.1f %%", value) end
-local function FormatPercentDiff(value) return string.format("%+.1f %%", value) end
-local function FormatELM(value) return string.format("x %3.1f", value) end
-
--- ****************************************************************************
--- ****************************************************************************
 --
 -- Stats: This combines ratings, modifiers, conversions and such
 --
@@ -238,21 +220,12 @@ local function FormatELM(value) return string.format("x %3.1f", value) end
 
 local StatEntry = class()
 
-function StatEntry:Constructor(stats, key, rkey, pkey, rfmt)
+function StatEntry:Constructor(stats, key, rkey, pkey)
     self.stats = stats
     self.stats[key] = self
     self.key  = key
     self.rkey = rkey and rkey or key
     self.pkey = pkey
-    self.rfmt = rfmt and rfmt or function(self, R) return FormatNumber(R, 0) end
-end
-
-function StatEntry:GetLevel()
-    if self.stats.modifier.hidden.level then
-        return self.stats.modifier.hidden.level
-    else
-        return self.stats.player:GetLevel()
-    end
 end
 
 function StatEntry:GetRating(tbl, key, L)
@@ -280,64 +253,6 @@ function StatEntry:Percent(L)    return self:GetPercent(self.stats.ratings, self
 function StatEntry:RefRating(L)  return self:GetRating(self.stats.reference, self.key, L) end
 function StatEntry:RefPercent(L) return self:GetPercent(self.stats.reference, self.key, L) end
 
-function StatEntry:RatingAsString(L, R)
-    if R ~= nil then
-        return self:rfmt(R)
-    else
-        return "N/A"
-    end
-end
-
-function StatEntry:PercentAsString(L, p)
-    if p ~= nil then
-        return FormatPercent(p)
-    else
-        return nil
-    end
-end
-
-function StatEntry:AsString(aspercent)
-    local L = self:GetLevel()
-    if aspercent and self.pkey ~= nil then
-        p = self:Percent(L)
-        if p ~= nil then return self:PercentAsString(L, p) end
-    end
-    return self:RatingAsString(L, self:Rating(L))
-end
-
--- ----------------------------------------------------------------------------
-
-function StatEntry:RefAsString(aspercent)
-    local L = self:GetLevel()
-    if self:Rating(L) and self:RefRating(L) then
-        if aspercent and self.pkey ~= nil then
-            return self:PercentAsString(L, self:RefPercent(L))
-        else
-            return self:RatingAsString(L, self:RefRating(L))
-        end
-    else
-        return nil
-    end
-end
-
-function StatEntry:DiffAsString(aspercent)
-    local L = self:GetLevel()
-    local a, b
-    if aspercent and self.pkey ~= nil then
-        a = self:Percent(L)
-        b = self:RefPercent(L)
-    else
-        a = self:Rating(L)
-        b = self:RefRating(L)
-        aspercent = false
-    end
-    if a ~= nil and b ~= nil and (math.abs(a - b) > 0.05) then
-        return aspercent and self:PercentAsString(L, a - b) or self:RatingAsString(L, a - b)
-    else
-        return nil
-    end
-end
-
 -- ----------------------------------------------------------------------------
 
 Stats = class()
@@ -358,8 +273,8 @@ function Stats:Constructor(player)
 
     StatEntry(self, "Morale")
     StatEntry(self, "Power")
-    StatEntry(self, "ICMR", nil, nil, function(self, R) return FormatNumber(R, 1) end)
-    StatEntry(self, "ICPR", nil, nil, function(self, R) return FormatNumber(R, 1) end)
+    StatEntry(self, "ICMR")
+    StatEntry(self, "ICPR")
 
     StatEntry(self, "Armor")
     StatEntry(self, "Might")
@@ -368,7 +283,7 @@ function Stats:Constructor(player)
     StatEntry(self, "Will")
     StatEntry(self, "Fate")
     
-    StatEntry(self, "CritRate", nil, "CritRate")
+    StatEntry(self, "CritRate", "CritRate", "CritRate")
     StatEntry(self, "CritMag",  "CritRate", "CritMag")
     StatEntry(self, "DevRate",  "CritRate", "DevRate")
 
@@ -393,11 +308,9 @@ function Stats:Constructor(player)
     StatEntry(self, "PartialParryMit", "Parry", "PartialBPEMit")
     StatEntry(self, "PartialEvadeMit", "Evade", "PartialBPEMit")
 
-    local armortype = ArmorType[player:GetClass()]
-
-    StatEntry(self, "CommonMit", nil, armortype)
-    StatEntry(self, "PhysMit", nil, armortype)
-    StatEntry(self, "TactMit", nil, armortype)
+    StatEntry(self, "CommonMit", nil, self.ratings.ID.ArmorType)
+    StatEntry(self, "PhysMit",   nil, self.ratings.ID.ArmorType)
+    StatEntry(self, "TactMit",   nil, self.ratings.ID.ArmorType)
 
     -- ------------------------------------------------------------------------
 
@@ -409,6 +322,14 @@ function Stats:FullBPERate(L)
         self["Block"]:Percent(L) +
         self["Parry"]:Percent(L) +
         self["Evade"]:Percent(L)
+end
+
+function Stats:GetLevel()
+    if self.reference and self.reference.ID then
+        return self.reference.ID.Level
+    else
+        return self.ratings.ID.Level
+    end
 end
 
 function Stats:Refresh(player)
