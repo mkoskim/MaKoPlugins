@@ -176,10 +176,12 @@ function CapRatings(L, armortype)
     return {
         CritRate   = ratingCap("CritRate", L),
         DevRate    = ratingCap("DevRate", L),
-        Mastery    = ratingCap("Mastery", L),
-    	OutHeal    = ratingCap("OutHeal", L),
+        PhysMast   = ratingCap("Mastery", L),
+        TactMast   = ratingCap("Mastery", L),
+    	OutHeals   = ratingCap("OutHeal", L),
+
     	Resistance = ratingCap("Resistance", L),
-        IncHeal    = ratingCap("IncHeal", L),
+        IncHeals   = ratingCap("IncHeal", L),
         
         Block      = ratingCap("BPE", L),
         Parry      = ratingCap("BPE", L),
@@ -202,10 +204,6 @@ end
 
 function T2Modifiers(L)
     return {
-        CommonMit = -5 * math.floor(L * 13.5),
-        PhysMit   = -5 * math.floor(L * 13.5),
-        TactMit   = -5 * math.floor(L * 13.5),
-
         Resistance = -90 * L,
         
         Block = -40 * L,
@@ -219,6 +217,10 @@ function T2Modifiers(L)
         PartialBlockMit = -40 * L,
         PartialParryMit = -40 * L,
         PartilaEvadeMit = -40 * L,
+
+        CommonMit = -5 * math.floor(L * 13.5),
+        PhysMit   = -5 * math.floor(L * 13.5),
+        TactMit   = -5 * math.floor(L * 13.5),
 
         ID = {
             Level = L,
@@ -249,6 +251,9 @@ function Stats:Constructor(player)
     -- ------------------------------------------------------------------------
 
     self.pkeys = {
+        PhysMast = "Mastery",
+        TactMast = "Mastery",
+    
         Block = "BPE",
         Parry = "BPE",
         Evade = "BPE",

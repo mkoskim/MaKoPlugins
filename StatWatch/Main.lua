@@ -13,8 +13,9 @@
 -- ****************************************************************************
 
 import "MaKoPlugins.StatWatch.Bindings"
-import "MaKoPlugins.StatWatch.Stats"
 import "MaKoPlugins.StatWatch.Migration"
+import "MaKoPlugins.StatWatch.Stats"
+import "MaKoPlugins.StatWatch.Formatting"
 import "MaKoPlugins.StatWatch.ShareWindow"
 
 -- ****************************************************************************
@@ -112,24 +113,6 @@ end
 --
 -- ****************************************************************************
 -- ****************************************************************************
-
-local function FormatNumber(number, decimals)
-    if number < 1000 then
-        return string.format("%." .. tostring(decimals or 0) .. "f", number)
-    elseif number < 150000 then
-        return string.format("%d,%03d", (number+0.5)/1000, (number+0.5)%1000)
-    elseif number < 1000000 then
-        return string.format("%.1fk", (number+0.5)/1000)
-    elseif number < 1500000 then
-        return string.format("%d,%03.1fk", (number+0.5)/1000000, ((number+0.5)%1000000)/1000)
-    else
-        return string.format("%.2fM", number/1e6)
-    end
-end
-
-local function FormatPercent(value) return string.format("%.1f %%", value) end
-local function FormatPercentDiff(value) return string.format("%+.1f %%", value) end
-local function FormatELM(value) return string.format("x %3.1f", value) end
 
 -- ----------------------------------------------------------------------------
 -- Stat Node (stat line in listbox)
@@ -441,8 +424,8 @@ function BrowseWindow:Constructor()
 	nodes:Add(
 		StatGroup( "In-Combat Regen",
 			{
-				StatNode("ICMR"),
-				StatNode("ICPR"),
+				StatNode("ICMR", nil, function(R) return FormatNumber(R, 1) end),
+				StatNode("ICPR", nil, function(R) return FormatNumber(R, 1) end),
 			}
 		)
 	);
@@ -462,18 +445,11 @@ function BrowseWindow:Constructor()
 	);
 	
 	nodes:Add(
-		StatGroup( "Critical",
+		StatGroup( "Offence",
 			{
 				StatNode("Critical Rating", "CritRate"),
 				StatNode("- Devastates", "DevRate"),
-				StatNode("- Magnitude", "CritMag")
-			}
-		)
-	);
-	
-	nodes:Add(
-		StatGroup( "Offence",
-			{
+				StatNode("- Magnitude", "CritMag"),
 				StatNode("Finesse", "Finesse"),
 				StatNode("Physical Mastery", "PhysMast"),
 				StatNode("Tactical Mastery", "TactMast"),
