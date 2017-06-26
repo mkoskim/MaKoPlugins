@@ -53,37 +53,6 @@ function Segment:p(R, L)
     return p
 end
 
-local function r2p_segment(R, L, segments)
-	for _, segment in ipairs(segments) do
-		if segment.Lmax == nil or L <= segment.Lmax then
-		    return segment:p(R, L)
-		end
-	end
-	return nil;
-end
-
--- ----------------------------------------------------------------------------
-
-local Linear = class()
-
-function Linear:Constructor(level, factor, C, cap)
-    self.level = level
-    self.factor = factor
-    self.C = C
-    self.cap = cap
-end
-
-local function r2p_linear(R, L, linears)
-    for _, linear in pairs(linears) do
-        if L <= linear.level then
-            local p = linear.factor(L) * R/1000.0 + linear.C
-            p = math.min(p, linear.cap)
-            return p
-        end
-    end
-    return nil
-end
-
 -- ----------------------------------------------------------------------------
 -- Stat data tables
 -- ----------------------------------------------------------------------------
@@ -162,6 +131,7 @@ local segments = {
 --]]
 }
 
+--[[
 local linears = {
     ["Mastery"] = {
         Linear( 20, function(L) return 14.6 end,        0,  40.0),
@@ -176,55 +146,32 @@ local linears = {
         Linear(105, function(L) return 2.7 end,         0, 400.0),
     },
 }
+]]--
 
-local function Set(list)
-	local set = {}
-	for _, l in ipairs(list) do set[l] = true end;
-	return set
+-- ----------------------------------------------------------------------------
+
+local function findSegment(segments, L)
+	if segments then
+	    for _, segment in ipairs(segments) do
+		    if segment.Lmax == nil or L <= segment.Lmax then
+		        return segment
+		    end
+		end
+	end
+	return nil
 end
 
-local hascap = Set{
-	"CritRate",
-	"DevRate",
-	"Mastery",
-	"OutHeals",
-	"Resistance",
-	"IncHeals",
-	"BPE",
-	"PartialBPE",
-	-- "PartialMit",
-	"LightArmor",
-	"MediumArmor",
-	"HeavyArmor",
-}
-
--- ----------------------------------------------------------------------------
--- Given the name of the stat (key), convert rating (R) to percentage
--- according to level (L)
--- ----------------------------------------------------------------------------
-
 function ratingToPercentage(key, R, L)
-    if R == nil then return nil end
-	if segments[key] then return r2p_segment(R, L, segments[key]) end
-	if linears[key] then return r2p_linear(R, L, linears[key]) end
+    if R ~= nil then
+        local segment = findSegment(segments[key], L)
+        if segment then return segment:p(R, L) end
+    end
     return nil
 end
 
 function ratingCap(key, L)
-	if hascap[key] == nil then return nil end;
-	if segments[key] then
-	    for _, segment in ipairs(segments[key]) do
-		    if segment.Lmax == nil or L <= segment.Lmax then
-			    return segment:Rcap(L)
-		    end
-	    end
-    elseif linears[key] then
-	    for _, lin in pairs(linears[key]) do
-		    if L <= lin.level then
-                local cap = 1000.0 * (lin.cap - lin.C) / lin.factor(L)
-                return cap
-		    end
-	    end
-    end
+    local segment = findSegment(segments[key], L)
+    if segment and segment.Pcap then return segment:Rcap(L) end
+    return nil
 end
 
