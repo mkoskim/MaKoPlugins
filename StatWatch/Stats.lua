@@ -212,11 +212,11 @@ function T2Modifiers(L)
 
         PartialBlock = -40 * L,
         PartialParry = -40 * L,
-        PartilaEvade = -40 * L,
+        PartialEvade = -40 * L,
 
         PartialBlockMit = -40 * L,
         PartialParryMit = -40 * L,
-        PartilaEvadeMit = -40 * L,
+        PartialEvadeMit = -40 * L,
 
         CommonMit = -5 * math.floor(L * 13.5),
         PhysMit   = -5 * math.floor(L * 13.5),
