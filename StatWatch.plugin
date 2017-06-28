@@ -2,7 +2,7 @@
 <Plugin><Information>
 <Name>StatWatch</Name>
 <Author>MaKo</Author>
-<Version>2.0-pre1</Version>
+<Version>2.0-pre2</Version>
 <Description>
 StatWatch is a plugin to track stats in real time (swapping gear pieces or getting buffs), and share your stats with your friends.
 
