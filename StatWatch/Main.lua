@@ -450,7 +450,9 @@ function BrowseWindow:Constructor()
 				StatNode("Critical Rating", "CritRate"),
 				StatNode("- Devastates", "DevRate"),
 				StatNode("- Magnitude", "CritMag"),
+				StatSep(),
 				StatNode("Finesse", "Finesse"),
+				StatSep(),
 				StatNode("Physical Mastery", "PhysMast"),
 				StatNode("Tactical Mastery", "TactMast"),
 				StatNode("- Outgoing Healing", "OutHeals"),
@@ -507,18 +509,6 @@ function BrowseWindow:Constructor()
 			}
 		)
 	);
-
-	--[[ nodes:Add(
-		StatGroup( "Experimental",
-			{
-				StatNode("Self-heal", "SelfHeal"),
-				StatSep(),
-				StatNode("Effective Morale", ""),
-				StatNode("- Common Damage", "EffectiveMoraleCommon"),
-				StatNode("- Tactical Damage", "TactELM"),
-			}
-		)
-	); -- ]]--
 
 	-- ------------------------------------------------------------------------
 	-- Expand groups which were expanded last time
