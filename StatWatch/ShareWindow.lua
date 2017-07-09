@@ -100,8 +100,10 @@ function StatShareWindow:Constructor(Settings, stats)
 
     -- ------------------------------------------------------------------------
 
+    --[[
     self.channelbtn = Utils.UI.DropDown({"", "/f", "/ra", "/k" })
     self.channelbtn:SetParent( self );
+    ]]--
 
     self.namebox = Utils.UI.ScrolledTextBox()
     self.namebox:SetParent(self)
@@ -125,10 +127,14 @@ function StatShareWindow:Constructor(Settings, stats)
     self.createbtn:SetParent( self );
     self.createbtn:SetText("Create")
     self.createbtn.MouseClick = function(sender, args)
+
+    --[[
         local channel = self.channelbtn:GetText()
         if channel == "" then
             channel = self.namebox:GetText()
         end
+    ]]--
+        local channel = self.namebox:GetText()
 
         local text = { }
         for _, key in pairs(self.order) do
@@ -138,7 +144,7 @@ function StatShareWindow:Constructor(Settings, stats)
             end
         end
 
-        text = table.concat(text, "\n- - - - - - - - - - - - - - - - - - -\n")
+        text = table.concat(text, "\n- - - - - - - - - - - - - - -\n")
 
         self.sendbtn:SetShortcut(Turbine.UI.Lotro.Shortcut(
             Turbine.UI.Lotro.ShortcutType.Alias,
@@ -182,14 +188,16 @@ function StatShareWindow:SizeChanged( args )
 
     local btntop = self:GetHeight() - 45
 
+    --[[
     self.channelbtn:SetWidth(60);
     self.channelbtn:SetPosition(20, btntop)
+    ]]--
 
     self.namebox:SetSize(
-        self:GetWidth() - (20 + 65) - (5 + 60 + 5 + 35) - 20,
+        self:GetWidth() - (20) - (5 + 60 + 5 + 35) - 20,
         18
     );
-    self.namebox:SetPosition(20 + 65, btntop + 1)
+    self.namebox:SetPosition(20, btntop + 1)
 
     -- ------------------------------------------------------------------------
 
@@ -232,7 +240,7 @@ function StatShareWindow:Refresh()
             FormatNumber(self.stats:Rating("ICMR") * 60),
             FormatNumber(self.stats:Rating("ICMR"), 1)
         )  .. "\n" ..
-        string.format("ICPR....: %s (%s / s)",
+        string.format("ICPR...: %s (%s / s)",
             FormatNumber(self.stats:Rating("ICPR") * 60),
             FormatNumber(self.stats:Rating("ICPR"), 1)
         )
@@ -240,18 +248,18 @@ function StatShareWindow:Refresh()
 
     self.groups["BasicStats"]:SetText(
         string.format("Might.....: %s",   FormatNumber(self.stats:Rating("Might"))) .. "\n" ..
-        string.format("Agility....: %s",  FormatNumber(self.stats:Rating("Agility"))) .. "\n" ..
-        string.format("Vitality...: %s",  FormatNumber(self.stats:Rating("Vitality"))) .. "\n" ..
-        string.format("Will........: %s", FormatNumber(self.stats:Rating("Will")))  .. "\n" ..
+        string.format("Agility...: %s",  FormatNumber(self.stats:Rating("Agility"))) .. "\n" ..
+        string.format("Vitality..: %s",  FormatNumber(self.stats:Rating("Vitality"))) .. "\n" ..
+        string.format("Will......: %s", FormatNumber(self.stats:Rating("Will")))  .. "\n" ..
         string.format("Fate......: %s",   FormatNumber(self.stats:Rating("Fate")))
     )
 
     self.groups["Offence"]:SetText(
-        string.format("Critical Rating....: %s - %s",
+        string.format("Critical Rating.: %s - %s",
             FormatNumber(self.stats:Rating("CritRate")),
             FormatPercent(self.stats:Percent("CritRate", L))
         ) .. "\n" ..
-        string.format("Finesse.............: %s - %s",
+        string.format("Finesse.........: %s - %s",
             FormatNumber(self.stats:Rating("Finesse")),
             FormatPercent(self.stats:Percent("Finesse", L))
         ) .. "\n" ..
@@ -269,7 +277,7 @@ function StatShareWindow:Refresh()
     )
 
     self.groups["Defence"]:SetText(
-        string.format("Resistance........: %s - %s",
+        string.format("Resistance.......: %s - %s",
             FormatNumber(self.stats:Rating("Resistance")),
             FormatPercent(self.stats:Percent("Resistance", L))
         ) .. "\n" ..
@@ -277,7 +285,7 @@ function StatShareWindow:Refresh()
             FormatNumber(self.stats:Rating("CritDef")),
             FormatPercent(self.stats:Percent("CritDef", L))
         ) .. "\n" ..
-        string.format("Incoming Healing: %s - %s",
+        string.format("Incoming Healing.: %s - %s",
             FormatNumber(self.stats:Rating("IncHeals")),
             FormatPercent(self.stats:Percent("IncHeals", L)) or "xxx"
         )
@@ -292,7 +300,7 @@ function StatShareWindow:Refresh()
             FormatNumber(self.stats:Rating("Parry")),
             FormatPercent(self.stats:Percent("Parry", L))
         ) .. "\n" ..
-        string.format("Evade: %s - %s",
+        string.format("Evade.: %s - %s",
             FormatNumber(self.stats:Rating("Evade")),
             FormatPercent(self.stats:Percent("Evade", L))
         )
@@ -317,7 +325,7 @@ function StatShareWindow:Refresh()
             FormatNumber(self.stats:Rating("TactMit")),
             FormatPercent(self.stats:Percent("TactMit", L))
         ) .. "\n" ..
-        string.format("OC/FW Mitigation: %s - %s",
+        string.format("OC/FW Mitigation..: %s - %s",
             FormatNumber(self.stats:Rating("PhysMit")),
             FormatPercent(self.stats:Percent("PhysMit", L))
         )
